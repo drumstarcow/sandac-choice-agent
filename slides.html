@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>杉达选择助手 · 期末汇报</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:#0f1226;color:#fff;overflow:hidden;}
+  .deck{position:relative;width:100vw;height:100vh;}
+  .slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;
+    padding:6vh 9vw;background:radial-gradient(1200px 600px at 70% 10%,#2a2f5a,#0f1226);}
+  .slide.active{display:flex;animation:fade .4s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  h1{font-size:46px;font-weight:800;background:linear-gradient(90deg,#ff6b6b,#ffd166);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:10px;text-align:center;}
+  h2{font-size:32px;margin-bottom:22px;color:#ffd166;}
+  .sub{color:#aab;font-size:18px;text-align:center;line-height:1.7;}
+  .card{background:#1a1f3a;border:1px solid #2c3360;border-radius:16px;padding:22px 26px;margin:10px 0;max-width:860px;width:100%;line-height:1.8;font-size:18px;}
+  .row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:10px;}
+  .pill{background:#222a4d;border:1px solid #36407a;border-radius:999px;padding:10px 18px;font-size:17px;}
+  .tree{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;margin:18px 0;}
+  .node{background:#222a4d;border:1px solid #3a4488;border-radius:14px;padding:14px 20px;font-size:17px;text-align:center;}
+  .node b{color:#ffd166;display:block;font-size:15px;margin-bottom:4px;}
+  .arrow{color:#7c8cff;font-size:26px;}
+  .arch{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .arch .box{background:#222a4d;border:1px solid #3a4488;border-radius:12px;padding:14px;min-width:130px;text-align:center;font-size:15px;}
+  .arch .box small{display:block;color:#9aa;margin-top:6px;font-size:12px;}
+  .tool{font-family:ui-monospace,Menlo,Consolas,monospace;background:#0d1024;border:1px solid #2c3360;border-radius:10px;padding:8px 12px;color:#7CFC9B;font-size:14px;display:inline-block;margin:4px;}
+  pre{background:#0d1024;border:1px solid #2c3360;border-radius:12px;padding:16px;color:#cfe;font-size:14px;line-height:1.6;max-width:880px;width:100%;overflow:auto;text-align:left;}
+  .nav{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;z-index:10;}
+  .nav button{background:#222a4d;color:#fff;border:1px solid #3a4488;border-radius:10px;padding:8px 16px;cursor:pointer;font-size:15px;}
+  .nav button:hover{background:#2c3360;}
+  .pg{color:#9aa;font-size:14px;}
+  .warn{color:#ff9a9e;}
+  .ok{color:#06d6a0;}
+  .foot{position:fixed;top:18px;right:22px;color:#667;font-size:13px;}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+  <!-- 1 封面 -->
+  <section class="slide active">
+    <h1>🎡 杉达选择助手</h1>
+    <h2 style="text-align:center">今天吃啥大转盘</h2>
+    <p class="sub">开源创新微专业 · 期末考查（路径 B：校园服务智能体）<br/>一个专门帮“选择困难”的大学生做吃饭决策的智能体</p>
+  </section>
+
+  <!-- 2 痛点 -->
+  <section class="slide">
+    <h2>🤔 问题与痛点</h2>
+    <div class="card">大学生普遍有“选择困难”：站在食堂门口不知道吃啥、想吃点辣又怕踩雷、外卖 App 越刷越乱。</div>
+    <div class="card">通用聊天机器人（豆包等）啥都答，却<strong>不专精</strong>、也<strong>不帮你做决定</strong>。本项目的核心价值是：<span class="ok">帮人做选择</span>。</div>
+    <div class="sub">思路：把“模糊的意愿”用一套<strong>决策大转盘</strong>一步步收敛成确定选择。</div>
+  </section>
+
+  <!-- 3 方案/决策树 -->
+  <section class="slide">
+    <h2>🎯 方案：决策大转盘（三层 + 名片）</h2>
+    <div class="tree">
+      <div class="node"><b>第一层</b>在哪吃<br/>食堂·外卖·外面吃</div>
+      <div class="arrow">→</div>
+      <div class="node"><b>第二层</b>口味<br/>辣·不辣·随便</div>
+      <div class="arrow">→</div>
+      <div class="node"><b>第三层</b>菜品<br/>按口味过滤·可拒绝重转</div>
+      <div class="arrow">→</div>
+      <div class="node"><b>确定前</b>美食名片<br/>勾起食欲</div>
+    </div>
+    <div class="row">
+      <span class="pill">转到不想要？点「拒绝」剔除，重排转盘</span>
+      <span class="pill">剩余选项概率自动均分</span>
+      <span class="pill">「随便」= 不过滤，全量菜品</span>
+    </div>
+  </section>
+
+  <!-- 4 交互亮点 -->
+  <section class="slide">
+    <h2>✨ 核心亮点：可交互 + 有食欲</h2>
+    <div class="row">
+      <div class="card" style="max-width:400px">🎡 <b>真实旋转大转盘</b><br/>Canvas 动画旋转，转到即结果；接受/拒绝按钮闭环。</div>
+      <div class="card" style="max-width:400px">📇 <b>美食名片</b><br/>确定前弹出特写+介绍，勾起食欲；不喜欢可「换一个」。</div>
+    </div>
+    <div class="sub">区别于“关键词 if-else”：转盘选项来自真实数据文件，剔除后概率均分重排——是真实决策辅助。</div>
+  </section>
+
+  <!-- 5 架构 -->
+  <section class="slide">
+    <h2>🧩 技术架构</h2>
+    <div class="arch">
+      <div class="box">用户自然语言<small>“不知道吃啥”</small></div>
+      <div class="box">LLM Agent<small>本地 Ollama<br/>系统提示词+决策树</small></div>
+      <div class="box">Tool Calling<small>真实发起工具调用</small></div>
+      <div class="box">业务工具+数据<small>data/food_data.json</small></div>
+      <div class="box">界面<small>Streamlit/HTML</small></div>
+    </div>
+    <div class="sub" style="margin-top:18px">零第三方依赖（`urllib` 直连 Ollama），离线可跑；模型可切换为百炼/OpenAI 兼容端点。</div>
+  </section>
+
+  <!-- 6 工具调用 -->
+  <section class="slide">
+    <h2>🔧 工具调用（已验证真实调用）</h2>
+    <div class="row">
+      <span class="tool">build_wheel(scene, preference)</span>
+      <span class="tool">finalize_decision(where, spice, dish)</span>
+      <span class="tool">share_with_roommate(content)</span>
+    </div>
+    <pre># 模型真实发起的工具调用（0.5B 本地模型实测）
+🔧 调用 build_wheel({'scene': 'where'})
+↳ {"__wheel__": true, "title": "📍 今天在哪吃？",
+    "options": ["食堂", "外卖", "外面吃"]}
+🔧 调用 finalize_decision({'where':'食堂','spice':'不辣','dish':'番茄炒蛋'})
+↳ 已生成今日决定并保存到 outputs/今日决定_*.md</pre>
+    <div class="sub">满足考查硬性要求：<span class="ok">必须有 Tool Calling，不能只做关键词 if-else</span>。</div>
+  </section>
+
+  <!-- 7 合规/危险操作 -->
+  <section class="slide">
+    <h2>🛡️ 合规与权限控制</h2>
+    <div class="card"><span class="warn">危险操作确认</span>：把决定“发给室友”属于对外发送，必须由用户点击确认才执行，否则不执行（演示可看确认弹窗）。</div>
+    <div class="card"><span class="ok">数据诚信</span>：当前为示例数据，已在代码与界面显式标注；替换为真实校园数据即真实可用。</div>
+    <div class="card">思政/防骗：涉及供应提醒“以实际供应为准”，并提示防范先付款后发货等诈骗。</div>
+  </section>
+
+  <!-- 8 与课程对应 -->
+  <section class="slide">
+    <h2>📋 与考查要求对应</h2>
+    <div class="card">
+      ✅ 路径 B（自然语言驱动已有功能）　✅ 真实 Tool Calling<br/>
+      ✅ ≥3 个工具　✅ ≥1 个 Skill（skills/decision_skill）<br/>
+      ✅ 界面（Streamlit + 终端 + 独立 HTML）　✅ 危险操作确认<br/>
+      ✅ README + HTML 幻灯片　✅ 提交到自己的 Git 仓库
+    </div>
+    <div class="sub">相对 demo_5 的创新：聚焦“决策辅助”更小更专的领域，引入可交互大转盘+拒绝概率均分+美食名片闭环。</div>
+  </section>
+
+  <!-- 9 演示效果 -->
+  <section class="slide">
+    <h2>🎬 演示效果一览</h2>
+    <div class="row">
+      <div class="card" style="max-width:380px">① 说“不知道吃啥”→ 第一层转盘<br/>② 转→食堂→接受</div>
+      <div class="card" style="max-width:380px">③ 口味→不辣→接受<br/>④ 菜品转盘→拒绝麻辣香锅→重转</div>
+    </div>
+    <div class="row">
+      <div class="card" style="max-width:380px">⑤ 转到番茄炒蛋→美食名片<br/>⑥ 确定→生成今日决定.md</div>
+      <div class="card" style="max-width:380px">⑦ 发给室友→<span class="warn">确认弹窗</span>（不执行）<br/>⑧ 下载产出物</div>
+    </div>
+  </section>
+
+  <!-- 10 局限与致谢 -->
+  <section class="slide">
+    <h2>🔭 局限与改进</h2>
+    <div class="card">局限：菜品为示例数据；0.5B 模型多级链偶有不稳（演示由界面状态机保证每层转盘正确）。</div>
+    <div class="card">改进：接入杉达真实菜单即真实可用；换更大模型提升自主链式调用；扩展去哪自习/周末去哪玩等场景。</div>
+    <div class="sub">感谢课程提供的路径 B 范式与 demo_5 参考；本作业为开源创新微专业期末考查提交。</div>
+  </section>
+</div>
+
+<div class="foot">杉达选择助手 · 期末汇报</div>
+<div class="nav">
+  <button onclick="prev()">← 上一页</button>
+  <span class="pg" id="pg">1 / 10</span>
+  <button onclick="next()">下一页 →</button>
+</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  let i=0;
+  function show(n){i=(n+slides.length)%slides.length;slides.forEach((s,k)=>s.classList.toggle('active',k===i));document.getElementById('pg').textContent=(i+1)+' / '+slides.length;}
+  function next(){show(i+1);} function prev(){show(i-1);}
+  document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' ')next();if(e.key==='ArrowLeft')prev();});
+  show(0);
+</script>
+</body>
+</html>

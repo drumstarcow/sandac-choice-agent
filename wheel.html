@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🎡 杉达选择助手 · 今天吃啥大转盘</title>
+<style>
+  :root{
+    --bg:#fff7f0; --card:#ffffff; --ink:#222; --muted:#777;
+    --pink:#ff6b6b; --green:#06d6a0; --blue:#118ab2; --purple:#9b5de5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+       background:linear-gradient(135deg,#fff1e6,#ffe9f0);color:var(--ink);min-height:100vh;}
+  .wrap{max-width:480px;margin:0 auto;padding:20px 16px 40px;}
+  h1{font-size:22px;text-align:center;margin:8px 0 2px;}
+  .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px;}
+  .title{font-size:18px;font-weight:700;text-align:center;margin:14px 0;}
+  .wheelbox{position:relative;width:320px;height:320px;margin:0 auto;}
+  canvas{display:block;filter:drop-shadow(0 8px 20px rgba(0,0,0,.12));}
+  .pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+    width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;
+    border-top:26px solid #e63946;z-index:5;}
+  .hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:54px;height:54px;background:#fff;border-radius:50%;border:3px solid #222;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;z-index:4;}
+  .center-emoji{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:30px;z-index:3;pointer-events:none;}
+  .btns{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap;}
+  button{cursor:pointer;border:none;border-radius:24px;padding:11px 20px;font-size:15px;font-weight:700;
+    background:var(--pink);color:#fff;box-shadow:0 4px 12px rgba(255,107,107,.35);transition:.15s;}
+  button:hover{transform:translateY(-2px);}
+  button.ghost{background:#fff;color:var(--ink);border:2px solid #ddd;box-shadow:none;}
+  button.green{background:var(--green);box-shadow:0 4px 12px rgba(6,214,160,.35);}
+  button:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+  .result{text-align:center;font-size:20px;font-weight:700;margin:14px 0;min-height:28px;}
+  .card{max-width:420px;margin:14px auto;border-radius:18px;overflow:hidden;background:var(--card);
+    box-shadow:0 8px 24px rgba(0,0,0,.12);animation:pop .35s ease;}
+  @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+  .card .hero{height:170px;display:flex;align-items:center;justify-content:center;font-size:96px;
+    background:linear-gradient(135deg,#ff9a9e,#fad0c4);}
+  .card .body{padding:16px 18px;}
+  .card .nm{font-size:22px;font-weight:800;}
+  .card .pr{color:var(--pink);font-weight:800;}
+  .card .loc{color:var(--muted);margin:6px 0;}
+  .tags span{background:var(--green);color:#fff;border-radius:12px;padding:2px 9px;font-size:12px;margin-right:5px;}
+  .desc{color:#444;line-height:1.6;margin-top:8px;}
+  .final{background:#eafff5;border:1px solid #b8f0d8;border-radius:14px;padding:14px 16px;margin:14px 0;}
+  .narr{text-align:center;color:var(--purple);font-size:14px;min-height:20px;margin:6px 0;}
+  .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:24px;}
+  a.dl{display:inline-block;margin-top:8px;color:var(--blue);font-weight:700;text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎡 杉达选择助手</h1>
+  <div class="sub">今天吃啥大转盘 · 帮你这个选择困难户做决定</div>
+
+  <div id="stage"></div>
+
+  <div class="narr" id="narr"></div>
+  <div class="result" id="result"></div>
+
+  <div class="btns" id="btns"></div>
+
+  <div class="foot">
+    决策树：在哪吃 → 口味(辣/不辣/随便) → 菜品（可拒绝重转）<br/>
+    数据源示例，替换为真实菜品即真实可用 ｜ 模型可接本地 Ollama（无网络也能转）
+  </div>
+</div>
+
+<script>
+// ---------------- 业务数据（示例，可替换为真实校园数据） ----------------
+const DATA = {
+  where_options: ["食堂","外卖","外面吃"],
+  spice_options: ["辣","不辣","随便"],
+  dishes: [
+    {name:"番茄炒蛋",price:8,canteen:"第一食堂",window:"大众窗口",tags:["不辣","素","米饭"],desc:"家常口味，下饭",e:"🍚"},
+    {name:"红烧肉",price:12,canteen:"第一食堂",window:"大众窗口",tags:["不辣","荤","米饭"],desc:"肥而不腻",e:"🍖"},
+    {name:"青椒肉丝",price:10,canteen:"第一食堂",window:"大众窗口",tags:["微辣","荤","米饭"],desc:"咸鲜微辣",e:"🥘"},
+    {name:"清炒时蔬",price:6,canteen:"第一食堂",window:"大众窗口",tags:["不辣","素"],desc:"当季绿叶菜",e:"🥬"},
+    {name:"鱼香肉丝盖饭",price:13,canteen:"第二食堂",window:"盖浇窗口",tags:["辣","荤","米饭"],desc:"酸甜微辣",e:"🍛"},
+    {name:"宫保鸡丁盖饭",price:13,canteen:"第二食堂",window:"盖浇窗口",tags:["微辣","荤","米饭"],desc:"花生鸡丁",e:"🍛"},
+    {name:"番茄牛腩面",price:15,canteen:"第二食堂",window:"盖浇窗口",tags:["不辣","荤","面食","汤"],desc:"汤面，牛腩软烂",e:"🍜"},
+    {name:"青菜香菇面",price:10,canteen:"第二食堂",window:"盖浇窗口",tags:["不辣","素","面食","汤"],desc:"清汤素面",e:"🍜"},
+    {name:"牛肉拉面",price:12,canteen:"第一食堂",window:"清真窗口",tags:["不辣","清真","荤","面食","汤"],desc:"清汤牛肉面",e:"🍜"},
+    {name:"羊肉抓饭",price:14,canteen:"第一食堂",window:"清真窗口",tags:["不辣","清真","荤","米饭"],desc:"胡萝卜羊肉饭",e:"🍚"},
+    {name:"凉拌牛肉",price:16,canteen:"第一食堂",window:"清真窗口",tags:["不辣","清真","荤"],desc:"凉菜",e:"🥩"},
+    {name:"麻辣香锅",price:18,canteen:"美食广场",window:"麻辣窗口",tags:["辣","荤","素"],desc:"自选荤素",e:"🌶️"},
+    {name:"麻辣烫",price:12,canteen:"美食广场",window:"麻辣窗口",tags:["辣","素","汤"],desc:"自选烫菜",e:"🍲"},
+    {name:"酸辣粉",price:9,canteen:"美食广场",window:"麻辣窗口",tags:["辣","素","面食","汤"],desc:"红薯粉",e:"🍜"},
+    {name:"红豆双皮奶",price:7,canteen:"美食广场",window:"甜品窗口",tags:["不辣","甜","素"],desc:"甜品",e:"🍰"},
+    {name:"绿豆沙",price:6,canteen:"美食广场",window:"甜品窗口",tags:["不辣","甜","素","汤"],desc:"消暑甜汤",e:"🥤"},
+    {name:"肉包",price:2,canteen:"第一食堂",window:"早餐窗口",tags:["不辣","荤","早餐"],desc:"鲜肉包",e:"🥟"},
+    {name:"菜包",price:2,canteen:"第一食堂",window:"早餐窗口",tags:["不辣","素","早餐"],desc:"青菜包",e:"🥟"},
+    {name:"豆浆",price:2,canteen:"第一食堂",window:"早餐窗口",tags:["不辣","素","早餐","汤"],desc:"甜豆浆",e:"🥛"},
+    {name:"茶叶蛋",price:1.5,canteen:"第一食堂",window:"早餐窗口",tags:["不辣","荤","早餐"],desc:"卤蛋",e:"🥚"},
+    {name:"小米粥",price:3,canteen:"第一食堂",window:"早餐窗口",tags:["不辣","素","早餐","汤"],desc:"养胃",e:"🥣"},
+    {name:"紫菜蛋花汤",price:3,canteen:"第二食堂",window:"汤品窗口",tags:["不辣","素","汤"],desc:"清淡",e:"🍲"},
+    {name:"排骨玉米汤",price:8,canteen:"第二食堂",window:"汤品窗口",tags:["不辣","荤","汤"],desc:"滋补",e:"🍲"},
+    {name:"西红柿鸡蛋汤",price:4,canteen:"第二食堂",window:"汤品窗口",tags:["不辣","素","汤"],desc:"开胃",e:"🍲"}
+  ]
+};
+const PALETTE = ["#FF6B6B","#FFD166","#06D6A0","#118AB2","#9B5DE5","#F15BB5","#00BBF9","#FEE440","#FB5607","#8338EC","#3A86FF","#FFBE0B"];
+
+// ---------------- 状态 ----------------
+let state = { scene:"where", options:[...DATA.where_options], ctx:"", choices:{}, dishPool:[], spinning:false, rotation:0, lastIdx:0 };
+
+const stage = document.getElementById("stage");
+const result = document.getElementById("result");
+const btns = document.getElementById("btns");
+const narr = document.getElementById("narr");
+
+function titleFor(scene){
+  if(scene==="where") return "📍 今天在哪吃？";
+  if(scene==="spice") return "🌶️ 今天想吃点啥口味？";
+  return "🍽️ 转到哪道菜？（不喜欢就拒绝，剔掉重转）";
+}
+function dishOptionsFor(spice){
+  if(spice==="辣") return DATA.dishes.filter(d=>d.tags.includes("辣"));
+  if(spice==="不辣") return DATA.dishes.filter(d=>d.tags.includes("不辣"));
+  return DATA.dishes.slice();
+}
+
+// ---------------- 转盘绘制 ----------------
+const cv = document.createElement("canvas");
+cv.width=320; cv.height=320;
+const ctx2d = cv.getContext("2d");
+function drawWheel(){
+  const n = state.options.length;
+  const cx=160, cy=160, R=150;
+  ctx2d.clearRect(0,0,320,320);
+  if(n===0) return;
+  const step = 2*Math.PI/n;
+  for(let i=0;i<n;i++){
+    const a0 = i*step - Math.PI/2 + state.rotation;
+    const a1 = (i+1)*step - Math.PI/2 + state.rotation;
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx,cy);
+    ctx2d.arc(cx,cy,R,a0,a1);
+    ctx2d.closePath();
+    ctx2d.fillStyle = (i===state.lastIdx && !state.spinning) ? "#222" : PALETTE[i%PALETTE.length];
+    ctx2d.fill();
+    ctx2d.strokeStyle="#fff"; ctx2d.lineWidth=2; ctx2d.stroke();
+    // 标签
+    const mid=(a0+a1)/2;
+    const lx=cx+R*0.62*Math.cos(mid), ly=cy+R*0.62*Math.sin(mid);
+    ctx2d.save();
+    ctx2d.translate(lx,ly);
+    ctx2d.rotate(mid+Math.PI/2);
+    ctx2d.fillStyle="#fff";
+    ctx2d.font="bold 15px 'PingFang SC',sans-serif";
+    ctx2d.textAlign="center"; ctx2d.textBaseline="middle";
+    ctx2d.fillText(state.options[i], 0, 0);
+    ctx2d.restore();
+  }
+  // 中心圆
+  ctx2d.beginPath(); ctx2d.arc(cx,cy,26,0,2*Math.PI);
+  ctx2d.fillStyle="#fff"; ctx2d.fill(); ctx2d.lineWidth=3; ctx2d.strokeStyle="#222"; ctx2d.stroke();
+}
+
+function renderWheel(){
+  stage.innerHTML = "";
+  const box=document.createElement("div"); box.className="wheelbox";
+  const ptr=document.createElement("div"); ptr.className="pointer"; box.appendChild(ptr);
+  box.appendChild(cv);
+  const hub=document.createElement("div"); hub.className="hub"; hub.textContent="转!"; box.appendChild(hub);
+  stage.appendChild(box);
+  drawWheel();
+  result.textContent = state.spinning ? "转动中…" : (state.options[state.lastIdx] ? "指向："+state.options[state.lastIdx] : "");
+  btns.innerHTML="";
+  const spin=document.createElement("button"); spin.textContent="🎯 转一下"; spin.disabled=state.spinning;
+  spin.onclick=doSpin; btns.appendChild(spin);
+  if(!state.spinning){
+    const acc=document.createElement("button"); acc.className="green"; acc.textContent="✅ 接受";
+    acc.onclick=()=>accept(state.options[state.lastIdx]); btns.appendChild(acc);
+    const rej=document.createElement("button"); rej.className="ghost"; rej.textContent="❌ 拒绝/换一个";
+    rej.onclick=()=>reject(state.options[state.lastIdx]); btns.appendChild(rej);
+  }
+}
+
+function doSpin(){
+  if(state.spinning || state.options.length===0) return;
+  state.spinning=true;
+  const n=state.options.length;
+  const step=2*Math.PI/n;
+  const t=Math.floor(Math.random()*n);
+  // 计算把第 t 个扇区中心转到顶部所需的旋转
+  const current = ((state.rotation % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+  const desired = ((-(t+0.5)*step) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
+  let delta = (desired - current) % (2*Math.PI);
+  if(delta<0) delta+=2*Math.PI;
+  const target = current + 2*Math.PI*5 + delta;
+  const start = current;
+  const dur = 2600;
+  const t0 = performance.now();
+  function frame(now){
+    let p=(now-t0)/dur; if(p>1)p=1;
+    const ease = 1-Math.pow(1-p,3);
+    state.rotation = start + (target-start)*ease;
+    drawWheel();
+    if(p<1){ requestAnimationFrame(frame); }
+    else {
+      state.rotation = target % (2*Math.PI);
+      state.lastIdx = t;
+      state.spinning=false;
+      result.textContent = "转到："+state.options[t];
+      narr.textContent = "🎲 命运的选择～";
+      renderWheel();
+    }
+  }
+  requestAnimationFrame(frame);
+  renderWheel();
+}
+
+function accept(val){
+  if(state.scene==="where"){
+    state.choices.where=val; state.scene="spice"; state.options=[...DATA.spice_options]; state.ctx=val; state.lastIdx=0;
+    narr.textContent="好嘞，那看看口味～"; renderWheel();
+  } else if(state.scene==="spice"){
+    state.choices.spice=val; state.scene="dish";
+    state.dishPool = dishOptionsFor(val);
+    state.options = state.dishPool.map(d=>d.name);
+    state.ctx=val; state.lastIdx=0;
+    narr.textContent="来挑道菜！不喜欢就拒绝重转～"; renderWheel();
+  } else if(state.scene==="dish"){
+    const d = state.dishPool.find(x=>x.name===val) || DATA.dishes.find(x=>x.name===val);
+    state.choices.dish=val;
+    showCard(d);
+  }
+}
+function reject(val){
+  let opts = state.options.filter(o=>o!==val);
+  if(state.scene==="dish") state.dishPool = state.dishPool.filter(x=>x.name!==val);
+  if(opts.length<=1){
+    if(opts.length===1){ accept(opts[0]); return; }
+    // 全拒了，重置本层
+    if(state.scene==="dish"){ state.dishPool = dishOptionsFor(state.choices.spice); state.options=state.dishPool.map(d=>d.name); }
+    else { state.options = state.scene==="where" ? [...DATA.where_options] : [...DATA.spice_options]; }
+    narr.textContent="都不要？那就重来这一层～"; state.lastIdx=0; renderWheel(); return;
+  }
+  state.options = opts; state.lastIdx=0;
+  narr.textContent="剔除【"+val+"】，剩余概率均分，再转！"; renderWheel();
+}
+
+// ---------------- 美食名片 ----------------
+async function aiNarrate(dishName){
+  // 可选：用本地 Ollama 生成一句勾食欲的话（无网络/无模型时静默跳过）
+  try{
+    const r = await fetch("http://localhost:11434/v1/chat/completions",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"buding-qwen05b-32k:latest",
+        messages:[{role:"system",content:"用一句诱人的话介绍这道校园美食，20字内，中文。"},
+                  {role:"user",content:"介绍："+dishName}], temperature:0.8, stream:false})
+    });
+    const j = await r.json();
+    return j.choices?.[0]?.message?.content?.trim() || "";
+  }catch(e){ return ""; }
+}
+function showCard(d){
+  stage.innerHTML="";
+  btns.innerHTML="";
+  result.textContent="";
+  const tags = d.tags.map(t=>`<span>${t}</span>`).join("");
+  const card=document.createElement("div"); card.className="card";
+  card.innerHTML=`
+    <div class="hero">${d.e||"🍽️"}</div>
+    <div class="body">
+      <div class="nm">${d.name} <span class="pr">￥${d.price}</span></div>
+      <div class="loc">📍 ${d.canteen} / ${d.window}</div>
+      <div class="tags">${tags}</div>
+      <div class="desc">${d.desc}</div>
+    </div>`;
+  stage.appendChild(card);
+  narr.textContent="📇 美食名片 · 确定前先勾起食欲";
+  const acc=document.createElement("button"); acc.className="green"; acc.textContent="😋 就吃这个，确定";
+  acc.onclick=doFinalize; btns.appendChild(acc);
+  const rej=document.createElement("button"); rej.className="ghost"; rej.textContent="🔁 换一个";
+  rej.onclick=()=>{ const o=state.dishPool.map(x=>x.name).filter(x=>x!==d.name);
+    if(o.length){ state.options=o; state.lastIdx=0; if(state.scene!=="dish"){} renderWheel(); }
+    else { accept(d.name); } };
+  btns.appendChild(rej);
+  aiNarrate(d.name).then(t=>{ if(t) narr.textContent="✨ "+t; });
+}
+
+// ---------------- 确定 / 产出物 ----------------
+function doFinalize(){
+  const c=state.choices;
+  const spiceTxt = (c.spice && c.spice!=="随便") ? c.spice : "不挑口味（随便）";
+  const d = state.dishPool.find(x=>x.name===c.dish) || DATA.dishes.find(x=>x.name===c.dish) || {};
+  const md = `# 🍽️ 今日决定 · 杉达选择助手\n\n- **在哪吃**：${c.where}\n- **口味**：${spiceTxt}\n- **最终菜品**：${c.dish}\n\n## 美食名片\n- 菜品：**${d.name}** ￥${d.price}\n- 位置：${d.canteen} / ${d.window}\n- 标签：${d.tags.join(", ")}\n- 介绍：${d.desc}\n\n_由「杉达选择助手·今天吃啥大转盘」生成，数据为示例，以实际供应为准。_`;
+  stage.innerHTML="";
+  btns.innerHTML="";
+  const box=document.createElement("div"); box.className="final";
+  box.innerHTML=`✅ 搞定！今天在【<b>${c.where}</b>】吃【<b>${spiceTxt}</b>】的【<b>${c.dish}</b>】（￥${d.price}）<br/>${d.canteen}/${d.window} · ${d.desc}`;
+  stage.appendChild(box);
+  const a=document.createElement("a"); a.className="dl"; a.textContent="⬇️ 下载今日决定(.md)";
+  a.href="data:text/markdown;charset=utf-8,"+encodeURIComponent(md);
+  a.download="今日决定.md"; stage.appendChild(a);
+  result.textContent="开吃吧！🎉";
+  narr.textContent="";
+  const again=document.createElement("button"); again.className="ghost"; again.textContent="🔄 再转一次";
+  again.onclick=resetAll; btns.appendChild(again);
+}
+function resetAll(){
+  state={scene:"where",options:[...DATA.where_options],ctx:"",choices:{},dishPool:[],spinning:false,rotation:0,lastIdx:0};
+  narr.textContent=""; result.textContent=""; renderWheel();
+}
+
+renderWheel();
+</script>
+</body>
+</html>
