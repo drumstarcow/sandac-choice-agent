@@ -1,4 +1,4 @@
-"""杉达选择助手 —— Streamlit 交互界面（路径B 演示用）
+"""吃饱饱助手 —— Streamlit 交互界面（路径B 演示用）
 
 特性：
 - 用户记忆画像（侧边栏）：校区定位(圆心) / 金额上限 / 口味偏好 / 忌口 / 饮食限制，跨轮持久化
@@ -19,15 +19,68 @@ import tools
 import profile as profile_mod
 import history as history_mod
 
-st.set_page_config(page_title="杉达选择助手", page_icon="🎡", layout="wide")
-st.title("🎡 杉达选择助手 · 帮我做选择")
-st.caption("路径B·校园决策智能体 ｜ 自然语言 → 工具调用 → 中文反馈 ｜ 记忆画像 + 校区定位 + 就近性价比推荐 ｜ 模型：本地 Ollama（无需联网Key）")
+st.set_page_config(page_title="吃饱饱助手", page_icon="🍱", layout="wide")
+st.title("🍱 吃饱饱助手")
+st.caption("校园决策智能体 ｜ 自然语言 → 工具调用 → 中文反馈 ｜ 记忆画像 + 校区定位 + 就近性价比推荐 ｜ 模型：本地 Ollama（无需联网Key）")
 
 PALETTE = ["#FF6B6B", "#FFD166", "#06D6A0", "#118AB2", "#9B5DE5",
            "#F15BB5", "#00BBF9", "#FEE440", "#FB5607", "#8338EC",
            "#3A86FF", "#FFBE0B"]
 
 COMMON_TAGS = ["辣", "不辣", "微辣", "清真", "荤", "素", "汤", "甜", "早餐", "米饭", "面食"]
+
+
+# ------------------------- 智能体开场引导（二选一） -------------------------
+def onboard_have_idea():
+    """用户：已经有想法了 → 引导他说出想吃什么，后续由 agent 生成性价比方案。"""
+    st.session_state.messages.append({"role": "user", "content": "我已经有想法了"})
+    st.session_state.history.append({"role": "user", "content": "我已经有想法了"})
+    reply = "好呀！你想吃啥？告诉我菜名或口味（比如「想吃火锅」「来点不辣的」），我帮你把附近性价比最高的几套方案列出来～"
+    st.session_state.messages.append({"role": "assistant", "content": reply})
+    st.session_state.history.append({"role": "assistant", "content": reply})
+    st.session_state.onboarded = True
+    st.session_state.cur_wheel = None
+    st.session_state.card = None
+    st.session_state.recommend_result = None
+    st.rerun()
+
+
+def onboard_no_idea():
+    """用户：还没想好 → “把选择权交给命运”，弹出第一层大转盘。"""
+    st.session_state.messages.append({"role": "assistant", "content": "既然没想法，那不如把选择权交给命运吧！🎰 来转大转盘～"})
+    st.session_state.history.append({"role": "assistant", "content": "既然没想法，那不如把选择权交给命运吧！🎰"})
+    st.session_state.cur_wheel = json.loads(tools.build_wheel("where"))
+    st.session_state.spin_index = 0
+    st.session_state.onboarded = True
+    st.session_state.card = None
+    st.session_state.recommend_result = None
+    st.rerun()
+
+
+# ------------------------- “有想法”分支兜底（保证必有方案） -------------------------
+import re as _re
+
+
+def _looks_like_have_idea(text):
+    """粗略判断用户是否表达了明确就餐目标（而非“没想法/随便”）。"""
+    t = text.strip()
+    if any(k in t for k in ["没想法", "不知道", "随便", "帮我选", "你定", "没想好", "不知道吃啥"]):
+        return False
+    return any(k in t for k in ["想吃", "想来", "来份", "来个", "来点", "就要", "点个", "点一份",
+                                "整点", "搞点", "我想", "来碗", "来杯", "喝杯", "来只", "吃个", "吃份"])
+
+
+def _extract_keyword(text):
+    """从“想吃火锅”这类句子里抽取核心目标词（火锅）。"""
+    t = text.strip()
+    for p in ["我想吃", "想吃", "我想来", "想来", "来份", "来个", "来点", "就要", "点个", "点一份",
+              "整点", "搞点", "来碗", "来杯", "喝杯", "来只", "吃个", "吃份", "我想"]:
+        if t.startswith(p):
+            t = t[len(p):]
+            break
+    t = _re.sub(r"^(一份|一个|份|个|些|吃|来|点|喝)", "", t)
+    t = t.strip(" 吧呀呢～。.，,！!？?的")
+    return t
 
 # ------------------------- session_state 初始化 -------------------------
 if "agent" not in st.session_state:
@@ -54,6 +107,14 @@ if "recommend_result" not in st.session_state:
     st.session_state.recommend_result = None
 if "wheel_budget" not in st.session_state:
     st.session_state.wheel_budget = "不限"
+if "onboarded" not in st.session_state:
+    st.session_state.onboarded = False
+# 智能体主动开场：进入即问“今天想好吃啥了不？”并引导二选一
+if not st.session_state.messages:
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": "今天想好吃啥了不？😋 选一个：① 我已经有想法了 ② 还没想好～",
+    })
 
 
 # ------------------------- 转盘 / 名片渲染 -------------------------
@@ -77,10 +138,12 @@ def wheel_svg(options, highlight=-1):
         mid = (a0 + a1) / 2
         lx, ly = cx + (r * 0.62) * math.cos(mid), cy + (r * 0.62) * math.sin(mid)
         svg.append(f'<text x="{lx:.1f}" y="{ly:.1f}" font-size="15" fill="#fff" text-anchor="middle" dominant-baseline="middle" font-weight="bold">{opt}</text>')
-    svg.append(f'<polygon points="{cx},25 {cx-12},5 {cx+12},5" fill="#e63946"/>')
-    svg.append(f'<circle cx="{cx}" cy="{cy}" r="26" fill="#fff" stroke="#222" stroke-width="2"/>')
-    if 0 <= highlight < n:
-        svg.append(f'<text x="{cx}" cy="{cy+5}" font-size="14" fill="#222" text-anchor="middle" font-weight="bold">选!</text>')
+    svg.append(f'<polygon points="{cx},20 {cx-13},2 {cx+13},2" fill="#e63946"/>')
+    # 中心“转一下”按钮（视觉锚点，符合转盘中心放转动按钮的习惯）
+    svg.append(f'<circle cx="{cx}" cy="{cy}" r="38" fill="#e63946" stroke="#fff" stroke-width="3"/>')
+    svg.append(f'<circle cx="{cx}" cy="{cy}" r="38" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="6"/>')
+    svg.append(f'<text x="{cx}" y="{cy-2}" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold">转一下</text>')
+    svg.append(f'<text x="{cx}" y="{cy+16}" font-size="10" fill="#fff" text-anchor="middle">点这里</text>')
     svg.append('</svg>')
     return "".join(svg)
 
@@ -99,37 +162,38 @@ def render_wheel():
         return
     opts = w["options"]
     st.subheader(w["title"])
-    # 金额上限（仅第三层菜品有意义，但常驻显示，便于随时设定）
-    if w["scene"] == "dish":
-        nb = st.selectbox("💰 转盘金额上限", ["不限", "10", "15", "20", "25", "30", "40"],
-                          index=["不限", "10", "15", "20", "25", "30", "40"].index(st.session_state.wheel_budget)
-                          if st.session_state.wheel_budget in ["不限", "10", "15", "20", "25", "30", "40"] else 0,
-                          key="budget_sel")
-        if nb != st.session_state.wheel_budget:
-            st.session_state.wheel_budget = nb
-            # 用新预算重建菜品转盘
+    # 💰 金额上限：贯穿整个大转盘流程（菜品层实时过滤，前两层仅记录并传递到菜品层生效）
+    budget_opts = ["不限", "10", "15", "20", "25", "30", "40"]
+    cur_b = st.session_state.wheel_budget
+    nb = st.selectbox("💰 金额上限（用于菜品筛选）", budget_opts,
+                      index=budget_opts.index(cur_b) if cur_b in budget_opts else 0,
+                      key="budget_sel")
+    if nb != st.session_state.wheel_budget:
+        st.session_state.wheel_budget = nb
+        if w["scene"] == "dish":
             nw = json.loads(tools.build_wheel("dish", st.session_state.choices.get("spice", ""), nb))
             st.session_state.cur_wheel = nw
             st.session_state.dish_options = list(nw["options"])
             st.session_state.spin_index = 0
-            st.rerun()
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        st.markdown(wheel_svg(opts, st.session_state.spin_index), unsafe_allow_html=True)
-    with col2:
-        st.write("**操作：**")
-        if st.button("🎯 转一下", type="primary", key="spin"):
+        st.rerun()
+    # 转盘居中展示，中心是醒目的“转一下”按钮
+    st.markdown(f'<div style="display:flex;justify-content:center">{wheel_svg(opts, st.session_state.spin_index)}</div>',
+                unsafe_allow_html=True)
+    picked = opts[st.session_state.spin_index] if opts else ""
+    st.info(f"🎯 当前指向：**{picked}**")
+    # “转一下”按钮放在转盘正下方居中（与中心视觉按钮呼应）
+    _, center_col, _ = st.columns([1, 1.4, 1])
+    with center_col:
+        if st.button("🎯 转一下", type="primary", key="spin", use_container_width=True):
             st.session_state.spin_index = random.randrange(len(opts))
             st.rerun()
-        picked = opts[st.session_state.spin_index] if opts else ""
-        st.info(f"当前指向：**{picked}**")
-        c1, c2 = st.columns(2)
-        with c1:
-            if st.button("✅ 接受", key="accept"):
-                handle_accept(w, picked)
-        with c2:
-            if st.button("❌ 拒绝 / 换一个", key="reject"):
-                handle_reject(w, picked)
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("✅ 接受", key="accept", use_container_width=True):
+            handle_accept(w, picked)
+    with c2:
+        if st.button("❌ 拒绝 / 换一个", key="reject", use_container_width=True):
+            handle_reject(w, picked)
 
 
 def handle_accept(w, picked):
@@ -255,8 +319,9 @@ def render_recommend():
     rec = st.session_state.recommend_result
     if not rec:
         return
+    if rec.get("note"):
+        st.info(rec["note"])
     if rec.get("count", 0) == 0:
-        st.info(rec.get("note", "没有符合条件的店家，试试放宽预算或口味。"))
         return
     crit_label = {"value": "性价比综合", "distance": "就近优先", "rating": "好评优先"}.get(rec.get("criteria"), "")
     st.subheader(f"📍 就近推荐 · {rec.get('campus','')}（圆心：{rec.get('center','')}）")
@@ -363,19 +428,20 @@ with st.sidebar:
                "替换为杉达真实数据即真实数据源。模型走本地 Ollama，无需联网 Key。")
 
 
-# ------------------------- 主区：就近推荐入口 -------------------------
-st.markdown("### 🎯 不想转大转盘？直接要方案")
-c1, c2, c3 = st.columns([1, 1, 2])
-with c1:
-    if st.button("🏆 最佳性价比方案", type="primary", key="rec_value"):
-        run_recommend("value")
-with c2:
-    if st.button("🚶 就近优先", key="rec_dist"):
-        run_recommend("distance")
-with c3:
-    if st.button("⭐ 好评优先", key="rec_rate"):
-        run_recommend("rating")
-st.caption("以你定位的校区为圆心，按 距离 + 性价比 + 评分 实时加权排序，显示店名/位置/距离/预估花销/评分。点「选这家」可生成决定文件。")
+# ------------------------- 主区：就近推荐入口（已进入对话后显示） -------------------------
+if st.session_state.onboarded:
+    st.markdown("### 🎯 不想转大转盘？直接要方案")
+    c1, c2, c3 = st.columns([1, 1, 2])
+    with c1:
+        if st.button("🏆 最佳性价比方案", type="primary", key="rec_value"):
+            run_recommend("value")
+    with c2:
+        if st.button("🚶 就近优先", key="rec_dist"):
+            run_recommend("distance")
+    with c3:
+        if st.button("⭐ 好评优先", key="rec_rate"):
+            run_recommend("rating")
+    st.caption("以你定位的校区为圆心，按 距离 + 性价比 + 评分 实时加权排序，显示店名/位置/距离/预估花销/评分。点「选这家」可生成决定文件。")
 
 # ------------------------- 展示历史消息 -------------------------
 for m in st.session_state.messages:
@@ -383,6 +449,17 @@ for m in st.session_state.messages:
         if m.get("steps"):
             render_steps(m["steps"])
         st.write(m["content"])
+
+# ------------------------- 开场引导：二选一（仅首次） -------------------------
+if not st.session_state.onboarded:
+    st.divider()
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("✅ 我已经有想法了", type="primary", key="ob_have"):
+            onboard_have_idea()
+    with c2:
+        if st.button("🎡 还没想好", key="ob_none"):
+            onboard_no_idea()
 
 # 就近推荐区
 if st.session_state.recommend_result:
@@ -469,6 +546,21 @@ if prompt := st.chat_input("例如：不知道今天吃啥，帮我选 / 我选�
             st.session_state.history.append({"role": "assistant", "content": r.get("content") or ""})
             st.rerun()
         else:
+            # 兜底：用户有明确就餐目标，但模型未触发推荐工具时，确定性生成方案，
+            # 保证“有想法”分支一定能给出性价比方案（不依赖小模型是否稳定发 tool call）
+            if _looks_like_have_idea(prompt) and not st.session_state.cur_wheel \
+                    and not st.session_state.recommend_result and not st.session_state.finalized:
+                kw = _extract_keyword(prompt)
+                rec = json.loads(tools.recommend_nearby_food(keyword=kw, criteria="value"))
+                if rec.get("count", 0) > 0:
+                    tip = "好嘞～按你的想法，附近性价比最高的几套方案 👇"
+                    render_steps([f"🔧 调用 recommend_nearby_food(keyword={kw!r})"])
+                    st.session_state.recommend_result = rec
+                    st.session_state.cur_wheel = None
+                    st.session_state.card = None
+                    st.session_state.messages.append({"role": "assistant", "content": tip, "steps": [f"🔧 调用 recommend_nearby_food(keyword={kw!r})"]})
+                    st.session_state.history.append({"role": "assistant", "content": tip})
+                    st.rerun()
             render_steps(r.get("steps", []))
             st.write(r["content"])
             st.session_state.messages.append({"role": "assistant", "content": r["content"], "steps": r.get("steps", [])})

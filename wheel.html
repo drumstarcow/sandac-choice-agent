@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>🎡 杉达选择助手 · 大转盘 + 就近推荐</title>
+<title>🎡 吃饱饱助手 · 大转盘 + 就近推荐</title>
 <style>
   :root{
     --bg:#fff7f0; --card:#ffffff; --ink:#222; --muted:#777;
@@ -70,7 +70,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>🎡 杉达选择助手</h1>
+  <h1>🍱 吃饱饱助手</h1>
   <div class="sub">帮你这个选择困难户做决定 · 大转盘 + 校区定位就近推荐</div>
 
   <div class="tabs">
@@ -216,17 +216,16 @@ function drawWheel(){
 }
 function renderWheel(){
   stage.innerHTML="";
-  if(wheelState.scene==="dish"){
-    const bsel=document.createElement("div"); bsel.className="controls";
-    bsel.innerHTML=`<label>💰 转盘金额上限</label>`;
-    const sel=document.createElement("select"); ["不限","10","15","20","25","30","40"].forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v==="不限"?"不限":("≤￥"+v);if(v===wheelState.budget)o.selected=true;sel.appendChild(o);});
-    sel.onchange=()=>{ wheelState.budget=sel.value; const pool=dishOptionsFor(wheelState.choices.spice, wheelState.budget); wheelState.dishPool=pool; wheelState.options=pool.map(d=>d.name); wheelState.lastIdx=0; renderWheel(); };
-    bsel.appendChild(sel); stage.appendChild(bsel);
-  }
+  // 💰 金额上限：贯穿整个大转盘流程（菜品层实时过滤，前两层仅记录并传到菜品层）
+  const bsel=document.createElement("div"); bsel.className="controls";
+  bsel.innerHTML=`<label>💰 金额上限（用于菜品筛选）</label>`;
+  const sel=document.createElement("select"); ["不限","10","15","20","25","30","40"].forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v==="不限"?"不限":("≤￥"+v);if(v===wheelState.budget)o.selected=true;sel.appendChild(o);});
+  sel.onchange=()=>{ wheelState.budget=sel.value; if(wheelState.scene==="dish"){ const pool=dishOptionsFor(wheelState.choices.spice, wheelState.budget); wheelState.dishPool=pool; wheelState.options=pool.map(d=>d.name); wheelState.lastIdx=0; } renderWheel(); };
+  bsel.appendChild(sel); stage.appendChild(bsel);
   const box=document.createElement("div"); box.className="wheelbox";
   const ptr=document.createElement("div"); ptr.className="pointer"; box.appendChild(ptr);
   box.appendChild(cv);
-  const hub=document.createElement("div"); hub.className="hub"; hub.textContent="转!"; box.appendChild(hub);
+  const hub=document.createElement("div"); hub.className="hub"; hub.textContent="转一下"; box.appendChild(hub);
   stage.appendChild(box); drawWheel();
   result.textContent = wheelState.spinning?"转动中…":(wheelState.options[wheelState.lastIdx]?"指向："+wheelState.options[wheelState.lastIdx]:"");
   btns.innerHTML="";
@@ -280,7 +279,7 @@ function showCard(d){
 function doFinalize(){
   const c=wheelState.choices; const spiceTxt=(c.spice&&c.spice!=="随便")?c.spice:"不挑口味（随便）";
   const d=wheelState.dishPool.find(x=>x.name===c.dish)||DATA.dishes.find(x=>x.name===c.dish)||{};
-  const md=`# 🍽️ 今日决定 · 杉达选择助手\n\n- **在哪吃**：${c.where}\n- **口味**：${spiceTxt}\n- **最终菜品**：${c.dish}\n\n## 美食名片\n- 菜品：**${d.name}** ￥${d.price}\n- 位置：${d.canteen} / ${d.window}\n- 标签：${d.tags.join(", ")}\n- 介绍：${d.desc}\n\n_由「杉达选择助手」生成，数据为示例，以实际供应为准。_`;
+  const md=`# 🍽️ 今日决定 · 吃饱饱助手\n\n- **在哪吃**：${c.where}\n- **口味**：${spiceTxt}\n- **最终菜品**：${c.dish}\n\n## 美食名片\n- 菜品：**${d.name}** ￥${d.price}\n- 位置：${d.canteen} / ${d.window}\n- 标签：${d.tags.join(", ")}\n- 介绍：${d.desc}\n\n_由「吃饱饱助手」生成，数据为示例，以实际供应为准。_`;
   stage.innerHTML=""; btns.innerHTML="";
   const box=document.createElement("div"); box.className="final";
   box.innerHTML=`✅ 搞定！今天在【<b>${c.where}</b>】吃【<b>${spiceTxt}</b>】的【<b>${c.dish}</b>】（￥${d.price}）<br/>${d.canteen}/${d.window} · ${d.desc}`;
@@ -327,7 +326,7 @@ function runRec(){
   items.forEach((it,idx)=>{
     const best=idx===0;
     const pct=Math.round(it.score*100);
-    const md=`# 📍 今日就近决定 · 杉达选择助手\n\n- **店家**：${it.name}\n- **地址**：${it.addr}\n- **距校区**：${it.dist.toFixed(2)} km\n- **人均预估**：￥${it.price}\n- **评分**：⭐ ${it.rating}\n- **招牌**：${it.sig}\n\n_由「杉达选择助手·就近推荐」生成，商户与距离为示例数据，以实际为准。_`;
+    const md=`# 📍 今日就近决定 · 吃饱饱助手\n\n- **店家**：${it.name}\n- **地址**：${it.addr}\n- **距校区**：${it.dist.toFixed(2)} km\n- **人均预估**：￥${it.price}\n- **评分**：⭐ ${it.rating}\n- **招牌**：${it.sig}\n\n_由「吃饱饱助手·就近推荐」生成，商户与距离为示例数据，以实际为准。_`;
     html+=`<div class="shop">
       <div class="top"><span class="nm">${it.name}</span><span class="rk ${best?'best':''}">${best?'🏆 最佳性价比':'#'+(idx+1)}</span></div>
       <div class="meta">📌 ${it.cat} · ${it.addr} ｜ 🚶 <b>${it.dist.toFixed(2)} km</b> ｜ 💰 人均 <b>￥${it.price}</b> ｜ ⭐ ${it.rating}</div>

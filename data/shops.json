@@ -13,6 +13,13 @@
     {"name": "老娘舅(金海店)", "category": "中式快餐", "address": "金海路商业广场", "lat": 31.2720, "lng": 121.6710, "rating": 4.5, "avg_price": 22, "tags": ["不辣", "米饭", "荤"], "signature": "卤肉饭套餐"},
     {"name": "麦当劳(金海路)", "category": "西式快餐", "address": "金海路地铁口", "lat": 31.2690, "lng": 121.6670, "rating": 4.3, "avg_price": 28, "tags": ["不辣", "荤"], "signature": "麦辣鸡腿堡"},
     {"name": "老乡鸡(金海店)", "category": "中式快餐", "address": "金海路商业广场2楼", "lat": 31.2725, "lng": 121.6685, "rating": 4.5, "avg_price": 26, "tags": ["不辣", "荤", "米饭"], "signature": "招牌鸡汤套餐"},
-    {"name": "川味观(小吃街)", "category": "川菜", "address": "校门口小吃街", "lat": 31.2680, "lng": 121.6720, "rating": 4.2, "avg_price": 25, "tags": ["辣", "荤"], "signature": "水煮鱼片"}
+    {"name": "川味观(小吃街)", "category": "川菜", "address": "校门口小吃街", "lat": 31.2680, "lng": 121.6720, "rating": 4.2, "avg_price": 25, "tags": ["辣", "荤"], "signature": "水煮鱼片"},
+    {"name": "凑凑火锅(金海店)", "category": "火锅", "address": "金海路商业广场3楼", "lat": 31.2728, "lng": 121.6678, "rating": 4.5, "avg_price": 62, "tags": ["辣", "荤", "汤"], "signature": "番茄锅+大红袍"},
+    {"name": "海底捞(金海路)", "category": "火锅", "address": "金海路地铁口2楼", "lat": 31.2688, "lng": 121.6668, "rating": 4.7, "avg_price": 78, "tags": ["不辣", "荤", "汤"], "signature": "番茄锅底"},
+    {"name": "丰茂烤串(小吃街)", "category": "烧烤", "address": "校门口小吃街", "lat": 31.2678, "lng": 121.6728, "rating": 4.3, "avg_price": 45, "tags": ["辣", "荤"], "signature": "羊肉串"},
+    {"name": "麻辣香锅(小吃街)", "category": "香锅", "address": "小吃街中段", "lat": 31.2692, "lng": 121.6712, "rating": 4.2, "avg_price": 32, "tags": ["辣", "荤", "素"], "signature": "自选香锅"},
+    {"name": "瑞幸咖啡(金海路)", "category": "咖啡", "address": "金海路沿街", "lat": 31.2712, "lng": 121.6705, "rating": 4.4, "avg_price": 16, "tags": ["不辣", "甜", "素"], "signature": "生椰拿铁"},
+    {"name": "沙绿轻食(商业广场)", "category": "轻食", "address": "金海路商业广场1楼", "lat": 31.2723, "lng": 121.6713, "rating": 4.3, "avg_price": 29, "tags": ["不辣", "素"], "signature": "鸡胸肉沙拉"},
+    {"name": "永和豆浆(金海路)", "category": "早餐饮品", "address": "金海路便利店旁", "lat": 31.2719, "lng": 121.6685, "rating": 4.1, "avg_price": 12, "tags": ["不辣", "素", "早餐"], "signature": "豆浆+油条"}
   ]
 }

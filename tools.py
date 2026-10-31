@@ -1,4 +1,4 @@
-"""杉达选择助手·今天吃啥大转盘 —— 业务工具层（路径B：普通功能 + 自然语言驱动）
+"""吃饱饱助手 —— 业务工具层（路径B：普通功能 + 自然语言驱动）
 
 实现“帮助大学生做选择”所需的若干可被调用的业务操作：
 - build_wheel：根据决策层级（where/spice/dish）从真实数据生成转盘配置
@@ -107,7 +107,7 @@ def finalize_decision(where, spice, dish, note=""):
     out = OUTPUT_DIR / f"今日决定_{ts}.md"
     spice_txt = spice if spice and spice != "随便" else "不挑口味（随便）"
     body = [
-        "# 🍽️ 今日决定 · 杉达选择助手",
+        "# 🍽️ 今日决定 · 吃饱饱助手",
         "",
         f"- **在哪吃**：{where}",
         f"- **口味**：{spice_txt}",
@@ -121,7 +121,7 @@ def finalize_decision(where, spice, dish, note=""):
         "",
         f"> 备注：{note or '（无）'}",
         "",
-        "_由「杉达选择助手·今天吃啥大转盘」生成，数据为示例，以实际供应为准。_",
+        "_由「吃饱饱助手」生成，数据为示例，以实际供应为准。_",
     ]
     out.write_text("\n".join(body), encoding="utf-8")
     history_mod.log_decision({
@@ -144,7 +144,7 @@ def finalize_recommend(name, address, distance_km, avg_price, rating, signature=
     ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     out = OUTPUT_DIR / f"就近决定_{ts}.md"
     body = [
-        "# 📍 今日就近决定 · 杉达选择助手",
+        "# 📍 今日就近决定 · 吃饱饱助手",
         "",
         f"- **店家**：{name}",
         f"- **地址**：{address}",
@@ -155,7 +155,7 @@ def finalize_recommend(name, address, distance_km, avg_price, rating, signature=
         "",
         f"> 备注：{note or '（无）'}",
         "",
-        "_由「杉达选择助手·就近推荐」生成，商户与距离为示例数据，以实际为准。_",
+        "_由「吃饱饱助手·就近推荐」生成，商户与距离为示例数据，以实际为准。_",
     ]
     out.write_text("\n".join(body), encoding="utf-8")
     history_mod.log_decision({
@@ -190,7 +190,7 @@ def _haversine(lat1, lng1, lat2, lng2):
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
-def recommend_nearby_food(campus=None, taste=None, budget=None, criteria="value", top_n=5):
+def recommend_nearby_food(campus=None, taste=None, budget=None, criteria="value", top_n=5, keyword=None):
     """以校区为圆心，综合「距离 + 性价比 + 评分」给用户推荐就近美食。
 
     参数:
@@ -199,6 +199,7 @@ def recommend_nearby_food(campus=None, taste=None, budget=None, criteria="value"
       budget  : 金额上限（元），缺省用画像 budget_cap；“不限”表示不限制
       criteria: 排序侧重 —— value(性价比综合,默认) / distance(就近优先) / rating(好评优先)
       top_n   : 返回前几名
+      keyword : 关键词精准匹配（如用户说“想吃火锅”则传“火锅”），匹配店名/招牌/类别/标签
     返回: 含 __recommend__ 标记的 JSON，items 按综合分降序，每项含距离/价格/评分/综合分/评分拆解。
     """
     prof = profile_mod.load_profile()
@@ -226,7 +227,9 @@ def recommend_nearby_food(campus=None, taste=None, budget=None, criteria="value"
         taste_list = list(prof.get("taste_prefs", [])) + list(prof.get("dietary", []))
     dislikes = list(prof.get("dislikes", []))
 
-    items = []
+    kw = (str(keyword).strip() if keyword else "")
+    matched = []
+    all_filtered = []
     for s in shops:
         if budget is not None:
             try:
@@ -242,7 +245,23 @@ def recommend_nearby_food(campus=None, taste=None, budget=None, criteria="value"
         dist = _haversine(c["lat"], c["lng"], s["lat"], s["lng"])
         item = dict(s)
         item["distance_km"] = round(dist, 2)
-        items.append(item)
+        all_filtered.append(item)
+        # 关键词精准匹配（用户说“想吃火锅/想来火锅”，keyword=火锅）
+        if kw:
+            hay = " ".join([
+                str(s.get("name", "")), str(s.get("signature", "")),
+                str(s.get("category", "")), " ".join(s.get("tags", [])),
+            ])
+            if kw in hay:
+                matched.append(item)
+        else:
+            matched.append(item)
+
+    # 关键词无匹配时，降级为“综合推荐”并给出提示，避免空手
+    items = matched if (matched or not kw) else all_filtered
+    none_match_note = ""
+    if kw and not matched:
+        none_match_note = f"附近没有严格匹配「{kw}」的店，以下是综合推荐。"
 
     if not items:
         return json.dumps({
@@ -271,9 +290,11 @@ def recommend_nearby_food(campus=None, taste=None, budget=None, criteria="value"
 
     items.sort(key=lambda x: x["score"], reverse=True)
     items = items[:top_n]
+    note = none_match_note or ""
     return json.dumps({
         "__recommend__": True, "campus": campus, "center": c["address"],
         "criteria": criteria, "budget": budget, "count": len(items), "items": items,
+        "note": note,
     }, ensure_ascii=False)
 
 
@@ -376,7 +397,7 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "recommend_nearby_food",
-            "description": "以用户所在校区为圆心，综合「距离+性价比+评分」推荐就近美食。当用户问“附近吃啥/推荐个性价比高的/外面吃去哪/便宜好吃的”时调用。参数：campus(校区，缺省用画像)；taste(口味偏好如“不辣”，缺省用画像)；budget(金额上限元，缺省用画像，“不限”不限制)；criteria(排序侧重：value性价比综合/默认, distance就近优先, rating好评优先)；top_n(返回数量默认5)。返回每项含店名/地址/距离km/均价/评分/综合分。",
+            "description": "以用户所在校区为圆心，综合「距离+性价比+评分」推荐就近美食。当用户问“附近吃啥/推荐个性价比高的/外面吃去哪/便宜好吃的”或明确说“想吃xx/想来xx/来份xx”时调用。参数：campus(校区，缺省用画像)；taste(口味偏好如“不辣”，缺省用画像)；budget(金额上限元，缺省用画像，“不限”不限制)；criteria(排序侧重：value性价比综合/默认, distance就近优先, rating好评优先)；top_n(返回数量默认5)；keyword(用户心里的目标，如“火锅”，做关键词精准匹配店名/招牌/类别/标签)。返回每项含店名/地址/距离km/均价/评分/综合分。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -384,7 +405,8 @@ TOOL_SCHEMAS = [
                     "taste": {"type": "string", "description": "口味偏好，逗号分隔，可空"},
                     "budget": {"type": "string", "description": "金额上限（元）或“不限”，可空"},
                     "criteria": {"type": "string", "description": "排序侧重：value / distance / rating，默认 value"},
-                    "top_n": {"type": "integer", "description": "返回前几名，默认5"}
+                    "top_n": {"type": "integer", "description": "返回前几名，默认5"},
+                    "keyword": {"type": "string", "description": "用户心里的目标关键词，如“火锅”，可空"}
                 },
                 "required": []
             }
