@@ -6,6 +6,8 @@
 
 > **开源创新微专业 · 期末考查（路径 B：校园服务智能体）**
 > 自然语言理解 → 真实 Tool Calling → 五层决策转盘 / 四条并列推荐 → 记忆画像 → 打卡卡片落盘。
+>
+> 仓库地址：<https://gitcode.com/bravecow/sandac-choice-agent> ｜ 课件：`slides.html`（双击即开）
 
 ## 一、项目简介
 
@@ -95,7 +97,7 @@
 | 界面 | **桌面窗口**（`app.py`：pywebview → Edge `--app` 无边框窗口 → 浏览器，三级降级），前端 `ui/` |
 | 危险操作有确认 | 写文件、改长期记忆这类动作 → 前端必须确认才执行 |
 | README + HTML 幻灯片 | 本文件 + **`slides.html`**（单文件、图片内嵌，双击即开，12 页） |
-| 提交到自己的 Git 仓库 | GitCode: bravecow/sandac-choice-agent |
+| 提交到自己的 Git 仓库 | <https://gitcode.com/bravecow/sandac-choice-agent>（公开） |
 
 ---
 
