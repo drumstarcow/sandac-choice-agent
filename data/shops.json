@@ -1,0 +1,18 @@
+{
+  "_说明": "【示例数据】金海校区周边餐饮商铺。坐标为相对校区的真实地理散布（用于 haversine 真实算距），店名为贴近大学生活的常见连锁/小吃示意，请替换为真实周边商户即可作为真实数据源。距离由代码按校区坐标实时计算，非写死。",
+  "near_campus": "金海校区",
+  "shops": [
+    {"name": "蜜雪冰城(金海路)", "category": "奶茶甜品", "address": "金海路近校西门", "lat": 31.2710, "lng": 121.6690, "rating": 4.6, "avg_price": 8, "tags": ["不辣", "甜", "素"], "signature": "冰鲜柠檬水"},
+    {"name": "正新鸡排(金海店)", "category": "小吃", "address": "校门口小吃街", "lat": 31.2705, "lng": 121.6698, "rating": 4.2, "avg_price": 10, "tags": ["不辣", "荤"], "signature": "招牌鸡排"},
+    {"name": "沪上阿姨(金海店)", "category": "奶茶甜品", "address": "金海路沿街", "lat": 31.2715, "lng": 121.6700, "rating": 4.4, "avg_price": 12, "tags": ["不辣", "甜", "素"], "signature": "血糯米奶茶"},
+    {"name": "一鸣真鲜奶吧", "category": "早餐饮品", "address": "金海路便利店旁", "lat": 31.2718, "lng": 121.6688, "rating": 4.4, "avg_price": 14, "tags": ["不辣", "甜", "素", "早餐"], "signature": "鲜奶+饭团"},
+    {"name": "沙县小吃(校门口)", "category": "中式快餐", "address": "校门口小吃街", "lat": 31.2700, "lng": 121.6680, "rating": 4.0, "avg_price": 15, "tags": ["不辣", "荤", "面食"], "signature": "蒸饺+炖罐"},
+    {"name": "重庆小面(小吃街)", "category": "面食", "address": "校门口小吃街", "lat": 31.2685, "lng": 121.6725, "rating": 4.0, "avg_price": 16, "tags": ["辣", "荤", "面食", "汤"], "signature": "麻辣小面"},
+    {"name": "兰州拉面(金海店)", "category": "清真面食", "address": "金海路中段", "lat": 31.2730, "lng": 121.6700, "rating": 4.3, "avg_price": 18, "tags": ["不辣", "清真", "荤", "面食"], "signature": "牛肉拉面"},
+    {"name": "杨国福麻辣烫", "category": "麻辣烫", "address": "小吃街内", "lat": 31.2695, "lng": 121.6715, "rating": 4.1, "avg_price": 20, "tags": ["辣", "素", "汤"], "signature": "自选麻辣烫"},
+    {"name": "老娘舅(金海店)", "category": "中式快餐", "address": "金海路商业广场", "lat": 31.2720, "lng": 121.6710, "rating": 4.5, "avg_price": 22, "tags": ["不辣", "米饭", "荤"], "signature": "卤肉饭套餐"},
+    {"name": "麦当劳(金海路)", "category": "西式快餐", "address": "金海路地铁口", "lat": 31.2690, "lng": 121.6670, "rating": 4.3, "avg_price": 28, "tags": ["不辣", "荤"], "signature": "麦辣鸡腿堡"},
+    {"name": "老乡鸡(金海店)", "category": "中式快餐", "address": "金海路商业广场2楼", "lat": 31.2725, "lng": 121.6685, "rating": 4.5, "avg_price": 26, "tags": ["不辣", "荤", "米饭"], "signature": "招牌鸡汤套餐"},
+    {"name": "川味观(小吃街)", "category": "川菜", "address": "校门口小吃街", "lat": 31.2680, "lng": 121.6720, "rating": 4.2, "avg_price": 25, "tags": ["辣", "荤"], "signature": "水煮鱼片"}
+  ]
+}

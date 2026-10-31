@@ -82,34 +82,62 @@
     <div class="sub">区别于“关键词 if-else”：转盘选项来自真实数据文件，剔除后概率均分重排——是真实决策辅助。</div>
   </section>
 
+  <!-- 4.5 记忆 + 定位 + 性价比 -->
+  <section class="slide">
+    <h2>🧠 不止转盘：记忆 + 定位 + 性价比</h2>
+    <div class="row">
+      <div class="card" style="max-width:400px">📍 <b>校区定位</b><br/>说“我在金海校区”，即以该校区为圆心（真实经纬度），haversine 算真实距离。</div>
+      <div class="card" style="max-width:400px">🧠 <b>记忆画像</b><br/>记住校区/预算/口味/忌口，跨轮套用；下次推荐自动过滤。</div>
+    </div>
+    <div class="row">
+      <div class="card" style="max-width:400px">🏆 <b>就近综合推荐</b><br/>距离+性价比+评分 加权排序，给店名/距离/花销/评分/综合分。</div>
+      <div class="card" style="max-width:400px">💰 <b>转盘金额上限</b><br/>转盘可选 ≤￥N 或“不限”；不想转时直接给最佳性价比方案。</div>
+    </div>
+    <div class="sub">从“一次性工具”升级为有记忆、有空间感知的专精型智能体。</div>
+  </section>
+
+  <!-- 4.6 选择历史与近期画像 -->
+  <section class="slide">
+    <h2>📜 选择历史 → 近期画像</h2>
+    <div class="card">每次完成一次选择（转盘定菜 / 就近选定店家）都自动留痕；用户可在界面查看历史、删除不想要的。</div>
+    <div class="card">最近 <b>10</b> 次选择聚合为“近期画像”：最常去校区/场景/口味、最爱菜或店、平均预算与花销、高频标签——从真实行为里“学”出你的习惯。</div>
+    <div class="sub">记忆分两层：你<strong>说出来的</strong>（记忆画像）+ 你<strong>选出来的</strong>（近期画像），共同让推荐越用越懂你。</div>
+  </section>
+
   <!-- 5 架构 -->
   <section class="slide">
     <h2>🧩 技术架构</h2>
     <div class="arch">
-      <div class="box">用户自然语言<small>“不知道吃啥”</small></div>
-      <div class="box">LLM Agent<small>本地 Ollama<br/>系统提示词+决策树</small></div>
+      <div class="box">用户自然语言<small>“不知道吃啥”<br/>“金海校区附近吃啥”</small></div>
+      <div class="box">LLM Agent<small>本地 Ollama<br/>系统提示词+决策树+记忆</small></div>
       <div class="box">Tool Calling<small>真实发起工具调用</small></div>
-      <div class="box">业务工具+数据<small>data/food_data.json</small></div>
-      <div class="box">界面<small>Streamlit/HTML</small></div>
+      <div class="box">业务工具+数据<small>菜品/商铺/校区/画像/历史</small></div>
+      <div class="box">界面<small>Streamlit/HTML/终端</small></div>
     </div>
     <div class="sub" style="margin-top:18px">零第三方依赖（`urllib` 直连 Ollama），离线可跑；模型可切换为百炼/OpenAI 兼容端点。</div>
+    <div class="sub">智能体的“记忆”由 <code>profile.py</code>（画像）+ <code>history.py</code>（历史/近期画像）两层构成，跨轮、跨会话保留。</div>
   </section>
 
   <!-- 6 工具调用 -->
   <section class="slide">
-    <h2>🔧 工具调用（已验证真实调用）</h2>
+    <h2>🔧 工具调用（已验证真实调用 · 共 7 个）</h2>
     <div class="row">
-      <span class="tool">build_wheel(scene, preference)</span>
-      <span class="tool">finalize_decision(where, spice, dish)</span>
-      <span class="tool">share_with_roommate(content)</span>
+      <span class="tool">build_wheel</span>
+      <span class="tool">recommend_nearby_food</span>
+      <span class="tool">finalize_decision</span>
+      <span class="tool">finalize_recommend</span>
+      <span class="tool">get/set_profile</span>
+      <span class="tool">get_recent_profile</span>
+      <span class="tool">share_with_roommate</span>
     </div>
-    <pre># 模型真实发起的工具调用（0.5B 本地模型实测）
-🔧 调用 build_wheel({'scene': 'where'})
-↳ {"__wheel__": true, "title": "📍 今天在哪吃？",
-    "options": ["食堂", "外卖", "外面吃"]}
-🔧 调用 finalize_decision({'where':'食堂','spice':'不辣','dish':'番茄炒蛋'})
-↳ 已生成今日决定并保存到 outputs/今日决定_*.md</pre>
-    <div class="sub">满足考查硬性要求：<span class="ok">必须有 Tool Calling，不能只做关键词 if-else</span>。</div>
+    <pre># 模型真实发起的工具调用（0.5B 本地模型实测通过）
+🔧 recommend_nearby_food({'campus':'金海校区','budget':'20','taste':'不辣'})
+↳ 以校区为圆心，haversine 算距，按 距离+性价比+评分 排序：
+  🏆 蜜雪冰城 0.05km ￥8 ⭐4.6 综合分0.983
+  正新鸡排 0.04km ￥10 ⭐4.2 综合分0.73
+🔧 set_profile({'field':'campus','value':'金海校区'})  → 记住定位
+🔧 get_recent_profile()  → 最近10次聚合出的“近期画像”</pre>
+    <div class="sub">满足考查硬性要求：<span class="ok">必须有 Tool Calling，不能只做关键词 if-else</span>；工具数远超“≥3 个 / 1 个 MCP(≥2 工具)”门槛。</div>
   </section>
 
   <!-- 7 合规/危险操作 -->
@@ -125,7 +153,7 @@
     <h2>📋 与考查要求对应</h2>
     <div class="card">
       ✅ 路径 B（自然语言驱动已有功能）　✅ 真实 Tool Calling<br/>
-      ✅ ≥3 个工具　✅ ≥1 个 Skill（skills/decision_skill）<br/>
+      ✅ 7 个工具（≥3 门槛）　✅ ≥1 个 Skill（skills/decision_skill）<br/>
       ✅ 界面（Streamlit + 终端 + 独立 HTML）　✅ 危险操作确认<br/>
       ✅ README + HTML 幻灯片　✅ 提交到自己的 Git 仓库
     </div>
@@ -142,6 +170,10 @@
     <div class="row">
       <div class="card" style="max-width:380px">⑤ 转到番茄炒蛋→美食名片<br/>⑥ 确定→生成今日决定.md</div>
       <div class="card" style="max-width:380px">⑦ 发给室友→<span class="warn">确认弹窗</span>（不执行）<br/>⑧ 下载产出物</div>
+    </div>
+    <div class="row">
+      <div class="card" style="max-width:380px">⑨ “金海校区附近预算20”→<span class="ok">就近推荐</span>：店名/距离/花销/评分<br/>🏆 标出最佳性价比</div>
+      <div class="card" style="max-width:380px">⑩ 侧边栏查看<span class="ok">选择历史</span>与<span class="ok">近期画像</span>，可删不想要的</div>
     </div>
   </section>
 

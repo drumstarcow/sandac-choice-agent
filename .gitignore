@@ -20,6 +20,10 @@ sessions/
 *.gguf
 models/
 
+# ===== 用户画像（本地记忆，不进仓库） =====
+data/profile.json
+data/history.json
+
 # ===== 编辑器/系统 =====
 .DS_Store
 Thumbs.db

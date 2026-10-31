@@ -30,24 +30,35 @@ BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
 MODEL = os.getenv("OLLAMA_MODEL", "buding-qwen05b-32k:latest")
 API_KEY = os.getenv("OPENAI_API_KEY", "ollama")
 
-SYSTEM_PROMPT = """你是“杉达选择助手·今天吃啥大转盘”，服务于上海杉达学院、帮助“选择困难”的大学生做吃饭决策。
-你的核心价值：当同学不知道吃什么时，用“大转盘”帮他把模糊的意愿一步步收敛成确定的选择。
+SYSTEM_PROMPT = """你是“杉达选择助手”，服务于上海杉达学院、帮助“选择困难”的大学生做吃饭决策。你有两个核心能力：
 
-决策树（务必按层级推进，通过调用 build_wheel 展示对应转盘）：
-1. 第一层 where：选项 食堂 / 外卖 / 外面吃。当用户说“不知道吃啥/帮我选/随便”时，先调用 build_wheel(scene="where")。
-2. 第二层 spice：选项 辣 / 不辣 / 随便。用户在 where 转盘选定后，调用 build_wheel(scene="spice", preference=<where的结果>)。
-3. 第三层 dish：具体菜品。用户在 spice 转盘选定后，调用 build_wheel(scene="dish", preference=<spice的结果>)。
-   - 若 spice 为“辣”，只展示带“辣”标签的菜；为“不辣”只展示带“不辣”标签的菜；为“随便”或空则展示全部菜品。
-   - 用户可在第三层转盘“拒绝”不想要的菜，界面会剔除后重转（概率均分），你无需处理剔除逻辑，只需在用户说“换一个/重转”时再次调用 build_wheel(scene="dish", preference=<当前spice>) 即可。
-4. 用户在第三层选定某道菜后，界面会弹出“美食名片”勾起食欲；用户确认“就吃这个/确定”后，调用 finalize_decision(where=, spice=, dish=) 写出今日决定（产出物）。
-5. 用户想把决定发给室友时，调用 share_with_roommate(content=)；该操作是对外发送，属于危险操作，若未被确认必须停下等待用户确认。
+【能力一·大转盘】当同学不知道吃什么、想玩一下时，用“决策大转盘”把模糊意愿收敛成确定选择。
+决策树（通过调用 build_wheel 展示对应转盘）：
+1. 第一层 where：食堂 / 外卖 / 外面吃。用户说“不知道吃啥/帮我选/随便”时，先调用 build_wheel(scene="where")。
+2. 第二层 spice：辣 / 不辣 / 随便。用户在 where 选定后，调用 build_wheel(scene="spice", preference=<where的结果>)。
+3. 第三层 dish：具体菜品。用户在 spice 选定后，调用 build_wheel(scene="dish", preference=<spice的结果>)，可传 budget=<画像的金额上限或“不限”> 过滤价格。
+   - spice 为“辣”只展辣菜，“不辣”只展不辣菜，“随便”/空展全部。
+   - 用户可在第三层“拒绝”不想要的菜，界面剔除后重转（概率均分），你无需处理剔除，用户说“换一个”时再次调用 build_wheel(scene="dish", preference=<当前spice>) 即可。
+4. 第三层选定后界面弹“美食名片”；用户确认“就吃这个/确定”后调用 finalize_decision(where=, spice=, dish=) 写出今日决定。
+
+【能力二·就近综合推荐】当同学已有想法、想要“直接给方案”（不想转盘），或问“附近吃啥/性价比高的/外面吃去哪”时，调用 recommend_nearby_food。
+- 该工具以用户所在校区为圆心（用 get_profile 读取 campus），用 haversine 真实算距，并按「距离+性价比+评分」加权排序返回就近美食，每项含距离km/均价/评分/综合分。
+- criteria 默认 value(性价比综合)；用户强调“就近/近一点”用 distance；强调“好评/评分高”用 rating。
+
+【用户记忆画像】你是一个有记忆的智能体：
+- 回答前先 get_profile 读取用户画像（校区、金额上限、口味偏好、忌口、饮食限制）。
+- 当用户透露偏好时立即 set_profile 记录：说“我在金海校区/定位金海”→ set_profile(campus,...)；“预算20/上限20”→ set_profile(budget_cap,20)；“不吃辣/忌辣”→ set_profile(dislikes,辣)；“爱吃不辣”→ set_profile(taste_prefs,不辣)；“清真”→ set_profile(dietary,清真)；“叫我xx”→ set_profile(name,xx)。
+- 后续推荐/转盘自动套用这些偏好（如预算过滤、忌口过滤），让用户感到“你记得我”。
+- 也可用 get_recent_profile 读取用户最近 10 次真实选择聚合出的“近期画像”（最常去校区/场景/口味、最爱菜或店、平均预算与花销），它比手动设置更反映真实习惯，推荐时优先参考。
+
+【危险操作】用户想把决定发给室友时调用 share_with_roommate(content=)，这是对外的危险操作，未被确认必须停下等待确认。
 
 工作规则：
-- 必须先调用工具获取真实选项/数据，再组织回答；严禁凭空编造菜品、价格或位置。
-- 转盘选项完全由 build_wheel 返回，你只负责决定调用哪个 scene 与偏好，不要自己列菜单。
+- 必须先调用工具获取真实数据再回答；严禁凭空编造菜品、价格、店名或距离。
+- 转盘选项完全由 build_wheel 返回，推荐结果完全由 recommend_nearby_food 返回，你只负责决定调哪个工具与参数，不要自己列菜单/店家。
 - 所有回答使用简体中文，语气亲切、活泼、面向学生，适当用 emoji。
-- 涉及供应务必提醒“以食堂实际供应为准”。
-- 若用户需求超出上述工具能力，礼貌说明并给出可替代建议。"""
+- 涉及供应/商户务必提醒“数据为示例，以实际为准”。
+- 若用户需求超出工具能力，礼貌说明并给可替代建议。"""
 
 
 def _safe_json(s):
@@ -77,6 +88,31 @@ def extract_wheel(text_or_steps):
                     return json.loads(c[idx:end + 1])
                 except Exception:
                     end = c.find("}", end + 1)
+                    if end == -1:
+                        break
+    return None
+
+
+def extract_recommend(text_or_steps):
+    """从工具结果中提取就近推荐配置 JSON（含 __recommend__ 标记）。"""
+    candidates = []
+    if isinstance(text_or_steps, str):
+        candidates.append(text_or_steps)
+    else:
+        candidates = list(text_or_steps)
+    for c in candidates:
+        if not isinstance(c, str):
+            continue
+        idx = c.find('{"__recommend__"')
+        if idx == -1:
+            idx = c.find('{ "__recommend__"')
+        if idx != -1:
+            end = c.rfind("}")
+            while end > idx:
+                try:
+                    return json.loads(c[idx:end + 1])
+                except Exception:
+                    end = c.rfind("}", 0, end)
                     if end == -1:
                         break
     return None
@@ -174,6 +210,7 @@ class ChoiceAgent:
                     }
                 messages.append(asst)
                 wheel = None
+                rec = None
                 for tc in tool_calls:
                     name = tc.get("function", {}).get("name", "")
                     args = _safe_json(tc.get("function", {}).get("arguments", "{}"))
@@ -184,6 +221,11 @@ class ChoiceAgent:
                     w = extract_wheel(result)
                     if w:
                         wheel = w
+                    r = extract_recommend(result)
+                    if r:
+                        rec = r
+                if rec:
+                    return {"status": "recommend", "recommend": rec, "content": msg.get("content") or "", "steps": steps}
                 if wheel:
                     return {"status": "wheel", "wheel": wheel, "content": msg.get("content") or "", "steps": steps}
                 continue
@@ -212,25 +254,31 @@ class ChoiceAgent:
 
 
 if __name__ == "__main__":
-    # 无界面快速自检（自动确认危险操作，便于演示）
-    a = ChoiceAgent()
-    hist = []
-    for q in [
-        "我不知道今天吃啥，帮我选选。",
-        "我选食堂。",
-        "我选不辣。",
-        "就吃番茄炒蛋，确定。",
-    ]:
-        print(f"\n用户：{q}")
-        r = a.chat(q, hist)
-        if r["status"] == "confirm":
-            print(f"[需确认] 工具：{r['tool']} 参数：{r['args']}")
-            r = a.resume_after_approve(r, q, hist)
-        if r["status"] == "wheel":
-            print("🎡 转盘：", r["wheel"])
-        print("步骤：")
-        for s in r["steps"]:
-            print("  ", s)
-        print("助手：", r["content"])
-        hist.append({"role": "user", "content": q})
-        hist.append({"role": "assistant", "content": r["content"]})
+    # 1) 不依赖 LLM 的工具自检：画像 + 就近推荐
+    import tools as T
+    print("== 画像写入/读取 ==")
+    print(T.set_profile("campus", "金海校区"))
+    print(T.set_profile("budget_cap", "20"))
+    print(T.set_profile("dislikes", "辣"))
+    print(T.get_profile())
+    print("\n== 就近综合推荐（金海校区·预算20·忌辣·性价比综合）==")
+    rec = json.loads(T.recommend_nearby_food(campus="金海校区", taste="不辣", budget="20", criteria="value", top_n=5))
+    for it in rec["items"]:
+        print(f"  {it['name']} | {it['distance_km']}km | ￥{it['avg_price']} | ⭐{it['rating']} | 综合分{it['score']} | {it.get('score_breakdown')}")
+
+    # 2) 若 Ollama 可用，做一次转盘 LLM 联动（失败不影响上面结果）
+    print("\n== 尝试 LLM 转盘联动（需 Ollama 运行）==")
+    try:
+        a = ChoiceAgent()
+        hist = []
+        for q in ["我不知道今天吃啥，帮我选选。", "我选食堂。", "我选不辣。"]:
+            print(f"\n用户：{q}")
+            r = a.chat(q, hist)
+            if r["status"] == "wheel":
+                print("🎡 转盘：", r["wheel"])
+            elif r["status"] == "done":
+                print("助手：", r["content"])
+            hist.append({"role": "user", "content": q})
+            hist.append({"role": "assistant", "content": r.get("content", "")})
+    except Exception as e:
+        print("（LLM 联动跳过：", e, "）")
