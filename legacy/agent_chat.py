@@ -265,7 +265,7 @@ def main():
                     prof = json.loads(tools.get_profile()).get("profile", {})
                     args = {"scene": nxt, "preference": picked, "budget": prof.get("budget_cap", "不限")}
                     res = tools.call_tool("build_wheel", args)
-                    trace([f"🔧 调用 build_wheel({args})", f"↳ {res}"])
+                    trace([f"[工具] 调用 build_wheel({args})", f"↳ {res}"])
                     print("  （这一步由编排层发起：小模型未自主接续，工具调用与结果仍是真实的）")
                     w = json.loads(res)
             continue

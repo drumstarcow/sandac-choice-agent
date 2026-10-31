@@ -406,16 +406,23 @@ def finalize(candidates_list, picked_id=None, criteria_note=""):
             if key(c) not in used:
                 pick = c
                 break
-        if pick is None:            # 候选不够四条时允许重复，但优先给没出现过的
-            pick = ordered[0]
+        if pick is None:            # 候选池不够四个不同选项：宁可不给，也不拿重复的凑数
+            continue
         used.add(key(pick))
         groups.append({"key": gkey, "label": label, "emoji": emoji,
                        "item": pick, "reason": _reason(gkey, pick, cands),
                        "picked": bool(picked_id) and pick.get("id") == picked_id})
 
+    note = criteria_note.strip().rstrip("：:，,；; ")
+    if len(groups) >= len(specs):
+        note = f"{note}，按四个维度各挑一条" if note else "按四个维度各挑一条"
+    else:
+        tail = "不重复的都在这儿了，没拿重复的凑数"
+        note = f"{note}，{tail}" if note else tail
+
     return json.dumps({
         "__four__": True, "groups": groups, "pool_size": len(cands),
-        "picked_id": picked_id, "note": criteria_note,
+        "picked_id": picked_id, "note": note,
         "avg_price": round(sum(prices) / len(prices), 1),
     }, ensure_ascii=False)
 
@@ -454,9 +461,9 @@ def search_dish(keyword="", meal_type="", budget=None, where="", taste=""):
     if not hit:
         # 关键词没命中 → 用口味兜一层，仍然给四条，不空手
         hit = candidates(meal_type=meal_type, spice=taste, budget=budget, where=where)
-        note = f"附近没有正式收录「{kw}」，这是同类里最接近的四套方案。"
+        note = f"附近没有正式收录「{kw}」，这是同类里最接近的几套方案。"
     else:
-        note = f"「{kw}」相关共 {len(hit)} 条，按四个维度各挑一条："
+        note = f"「{kw}」相关共 {len(hit)} 条"
     data = json.loads(finalize(hit, criteria_note=note))
     data["keyword"] = kw
     data["matched"] = bool(kw and any(

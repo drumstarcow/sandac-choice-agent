@@ -9,7 +9,6 @@
     python webchat.py            # 启动并自动打开浏览器
     python webchat.py 8780       # 指定端口
 """
-import ast
 import json
 import os
 import re
@@ -226,42 +225,34 @@ def act_pick_shop(payload):
     return {"content": res}
 
 
-def parse_steps(steps):
-    """把 agent.py 的步骤文本解析成结构化工具调用，前端渲染成卡片。
+def build_tools(calls, steps=None):
+    """把 agent 返回的**结构化 calls** 直接转成前端卡片。
 
-    原始格式：'🔧 调用 build_wheel({\'scene\': \'where\'})' 后跟 '↳ {json...}'
+    历史版本靠解析「调用 xxx(...)」这类步骤文本反推工具调用，
+    模型只要不按那个格式吐字，就会被判成"没调工具"。现在 agent.chat()
+    已经返回 calls=[{name,args,result}]，这里只做字段搬运，不做文本猜测。
+    steps 仅用于收集括号说明（如"已回退到第一层"），不参与任何判断。
     """
-    calls, notes = [], []
-    cur = None
-    for s in steps or []:
-        if not isinstance(s, str):
+    out = []
+    for c in calls or []:
+        if not isinstance(c, dict):
             continue
-        t = s.strip()
-        if t.startswith("🔧 调用 "):
-            body = t[len("🔧 调用 "):]
-            name, args = body, {}
-            i = body.find("(")
-            if i > 0 and body.endswith(")"):
-                name = body[:i]
-                try:
-                    args = ast.literal_eval(body[i + 1:-1])
-                except Exception:
-                    args = {"_raw": body[i + 1:-1]}
-            cur = {"name": name, "args": args, "result": ""}
-            calls.append(cur)
-        elif t.startswith("↳") and cur is not None:
-            cur["result"] = t[1:].strip()[:800]
-            cur = None
-        elif t.startswith("（模型这次没主动接上"):
-            notes.append(t)
-        elif t.startswith("✅ 用户已确认"):
-            calls.append({"name": "confirmed", "args": {}, "result": t})
-    return {"calls": calls, "notes": notes}
+        res = c.get("result")
+        if not isinstance(res, str):
+            res = "" if res is None else json.dumps(res, ensure_ascii=False)
+        out.append({
+            "name": c.get("name", ""),
+            "args": c.get("args") or {},
+            "result": res[:800],
+        })
+    notes = [s.strip() for s in (steps or [])
+             if isinstance(s, str) and s.strip().startswith("（")]
+    return {"calls": out, "notes": notes}
 
 
-def assistant_msg(content, steps):
+def assistant_msg(content, steps, calls=None):
     return {"role": "assistant", "content": content,
-            "tools": parse_steps(steps), "steps": steps}
+            "tools": build_tools(calls, steps), "steps": steps}
 
 
 def act_again():
@@ -290,8 +281,9 @@ def act_chat(text):
 
     content = (r.get("content") or "").strip()
     steps = r.get("steps", [])
+    calls = r.get("calls") or []     # ← 判定依据：结构化 calls，不看文本里有没有 emoji
     if content:
-        out.append(assistant_msg(content, steps))
+        out.append(assistant_msg(content, steps, calls))
 
     status = r.get("status")
 
@@ -299,39 +291,47 @@ def act_chat(text):
         s.wheel = r["wheel"]
         # 模型给的 scene 可能不规范，或该层没筛出候选 → 兜底回调第一层
         if not s.wheel.get("options"):
-            s.wheel = json.loads(tools.build_wheel("where"))
+            raw = tools.build_wheel("where")
+            s.wheel = json.loads(raw)
             steps = list(steps) + ["（这一层没筛出候选，已回退到第一层：今天在哪吃）"]
+            calls = calls + [{"name": "build_wheel", "args": {"scene": "where"}, "result": raw}]
         if not content:
-            out.append(assistant_msg("既然没想法，那不如把选择权交给命运吧！🎰", steps))
+            out.append(assistant_msg("既然没想法，那不如把选择权交给命运吧！🎰", steps, calls))
         out.append({"role": "wheel", "wheel": s.wheel_view()})
 
     elif status == "recommend" and r.get("recommend"):
         if not content:
-            out.append(assistant_msg("好嘞～按你的想法，附近性价比最高的几套方案 👇", steps))
+            out.append(assistant_msg("好嘞～按你的想法，附近性价比最高的几套方案 👇", steps, calls))
         out.append({"role": "recommend", "recommend": r["recommend"],
                     "budgetOptions": BUDGET_OPTIONS})
 
     else:
-        # 模型没发工具调用 → 编排层兜底（工具仍然真实执行，界面会标明）
-        no_tool = not any(isinstance(x, str) and "🔧" in x for x in steps)
-        if no_tool and not s.wheel and not s.finalized:
+        # 模型这一轮一个工具都没调（calls 为空）→ 编排层兜底，工具仍然真实执行
+        if not calls and not s.wheel and not s.finalized:
             if _looks_like_no_idea(text):
-                s.wheel = json.loads(tools.build_wheel("where"))
+                raw = tools.build_wheel("where")
+                s.wheel = json.loads(raw)
+                fb = [{"name": "build_wheel", "args": {"scene": "where"}, "result": raw}]
                 if not content:
                     out.append(assistant_msg(
                         "既然没想法，那不如把选择权交给命运吧！🎰",
-                        ["🔧 调用 build_wheel({'scene': 'where'})",
-                         "（模型这次没主动接上，由编排层发起；工具调用与结果仍是真实的）"]))
+                        ["[工具] 调用 build_wheel({'scene': 'where'})",
+                         "（模型这次没主动接上，由编排层发起；工具调用与结果仍是真实的）"],
+                        fb))
                 out.append({"role": "wheel", "wheel": s.wheel_view()})
             elif _looks_like_have_idea(text):
                 kw = _extract_keyword(text)
-                rec = json.loads(tools.recommend_nearby_food(keyword=kw, criteria="value"))
+                raw = tools.recommend_nearby_food(keyword=kw, criteria="value")
+                rec = json.loads(raw)
                 if rec.get("count", 0) > 0:
                     if not content:
                         out.append(assistant_msg(
                             "好嘞～按你的想法，附近性价比最高的几套方案 👇",
-                            [f"🔧 调用 recommend_nearby_food(keyword={kw!r})",
-                             "（模型这次没主动接上，由编排层发起；工具调用与结果仍是真实的）"]))
+                            [f"[工具] 调用 recommend_nearby_food(keyword={kw!r})",
+                             "（模型这次没主动接上，由编排层发起；工具调用与结果仍是真实的）"],
+                            [{"name": "recommend_nearby_food",
+                              "args": {"keyword": kw, "criteria": "value"},
+                              "result": raw}]))
                     out.append({"role": "recommend", "recommend": rec,
                                 "budgetOptions": BUDGET_OPTIONS})
 
@@ -341,7 +341,7 @@ def act_chat(text):
     s.history = s.history[-12:]
 
     if not out:
-        out.append(assistant_msg(content or "（我这边没接上，你再说一遍？）", steps))
+        out.append(assistant_msg(content or "（我这边没接上，你再说一遍？）", steps, calls))
     return out
 
 

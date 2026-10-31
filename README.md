@@ -185,9 +185,20 @@ DECAY = 0.6
 
 ### 8.2 Tool Calling 契约
 
-- 模型返回的 `tool_calls` 是**结构化读取**的，界面按 `calls[]` 渲染，**不解析 emoji**
-- 日志固定打印：`[TOOL] tool_calls=1 layer=dish name=build_wheel`
-- 兜底只在**模型异常 / 返回空**时触发：写 `SESS.used_fallback`、打 `[FALLBACK] reason=...`、界面黄标签「兜底模式」。正常演示全程不应出现
+- 模型返回的 `tool_calls` 是**结构化读取**的，界面按 `calls[]` 渲染，**不解析 emoji、不解析任何文本标记**
+- 全仓 `grep "🔧"` 应为 **0 条**（历史版本曾用这个字符判断"模型有没有调工具"，已彻底移除）
+- 日志按来源打标，评审可据此判断哪次是模型真调用：
+
+  | 日志 | 含义 |
+  |---|---|
+  | `[TOOL] source=model ...` | 模型自己决定调用的工具（答辩重点看这个） |
+  | `[TOOL] source=orchestrator ...` | 界面操作触发（点某层转盘、确认、收尾） |
+  | `[TOOL] source=fallback ...` | 模型异常后的兜底执行，仍真实调用工具 |
+
+- 兜底只在**两种**情况触发，且必定同时写 `SESS.used_fallback`、打 `[FALLBACK] reason=...`、界面黄标签「兜底模式」：
+  1. `agent.chat()` 抛异常或返回 `status=error`（`try/except` 分支）
+  2. 模型这一轮 `tool_calls=0 且 content 为空`（完全空返回，`reason` 会带上 `status=... tool_calls=0 content=0`）
+- 正常演示全程不应出现 `[FALLBACK]`；出现即为异常，需要看 `reason`
 
 ### 8.3 挑刺测试清单（交前逐条跑）
 

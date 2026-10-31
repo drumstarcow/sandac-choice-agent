@@ -68,7 +68,7 @@ def do_wheel():
         choices["dish"] = show_wheel(w)
         card = tools.get_dish_card(choices["dish"])
         print(f"📇 {card['name']} ￥{card['price']} ｜ {card.get('desc')}")
-    print("\n🔧", tools.finalize_decision(choices.get("where", ""), choices.get("spice", ""), choices.get("dish", "")))
+    print("\n[工具]", tools.finalize_decision(choices.get("where", ""), choices.get("spice", ""), choices.get("dish", "")))
 
 
 def do_recommend():
@@ -84,7 +84,7 @@ def do_recommend():
     pick = input("选哪家编号生成决定（回车跳过）：").strip()
     if pick.isdigit() and 1 <= int(pick) <= len(rec["items"]):
         it = rec["items"][int(pick) - 1]
-        print("\n🔧", tools.finalize_recommend(it["name"], it.get("address",""), it["distance_km"], it["avg_price"], it["rating"], it.get("signature","")))
+        print("\n[工具]", tools.finalize_recommend(it["name"], it.get("address",""), it["distance_km"], it["avg_price"], it["rating"], it.get("signature","")))
 
 
 def do_profile():

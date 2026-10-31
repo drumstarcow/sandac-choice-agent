@@ -277,7 +277,8 @@ class ChoiceAgent:
                 args = _safe_json(tc.get("function", {}).get("arguments", "{}"))
                 result = call_tool(name, args)
                 calls.append({"name": name, "args": args, "result": result})
-                steps.append(f"🔧 调用 {name}({args})")
+                # steps 只给人看（控制台/调试），判定工具调用一律看上面的结构化 calls
+                steps.append(f"[工具] 调用 {name}({args})")
                 steps.append(f"↳ {result}")
                 messages.append({"role": "tool", "tool_call_id": tc.get("id") or f"call_{len(calls)}",
                                  "content": result})

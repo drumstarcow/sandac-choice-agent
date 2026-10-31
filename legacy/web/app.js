@@ -73,7 +73,7 @@ function addAssistant(content, tools, allowHtml) {
 function renderTools(tools) {
   const box = el('div', 'tools');
   const head = el('div', 'tools-head');
-  head.innerHTML = `<span class="caret">▶</span><span>🔧 工具调用</span>
+  head.innerHTML = `<span class="caret">▶</span><span>工具调用</span>
     <span class="count">${tools.calls.length} 次 · 点击展开</span>`;
   head.onclick = () => box.classList.toggle('open');
   box.appendChild(head);

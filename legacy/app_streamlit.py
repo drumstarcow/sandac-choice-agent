@@ -231,7 +231,7 @@ def build_wheel_html(options, probs, preset_idx=None):
 def render_steps(steps):
     if not steps:
         return
-    with st.expander("🔧 工具调用过程", expanded=False):
+    with st.expander("工具调用过程", expanded=False):
         for s in steps:
             st.write(s)
 
@@ -383,7 +383,7 @@ def render_card():
 def do_finalize():
     ch = st.session_state.choices
     res = tools.finalize_decision(ch.get("where", ""), ch.get("spice", ""), ch.get("dish", ""))
-    steps = [f"🔧 调用 finalize_decision({ch})", f"↳ {res}"]
+    steps = [f"[工具] 调用 finalize_decision({ch})", f"↳ {res}"]
     path = ""
     if "保存到 " in res:
         path = res.split("保存到 ", 1)[1].split("：", 1)[0].strip()
@@ -660,11 +660,11 @@ if prompt := st.chat_input("例如：不知道今天吃啥，帮我选 / 我选�
                 rec = json.loads(tools.recommend_nearby_food(keyword=kw, criteria="value"))
                 if rec.get("count", 0) > 0:
                     tip = "好嘞～按你的想法，附近性价比最高的几套方案 👇"
-                    render_steps([f"🔧 调用 recommend_nearby_food(keyword={kw!r})"])
+                    render_steps([f"[工具] 调用 recommend_nearby_food(keyword={kw!r})"])
                     st.session_state.recommend_result = rec
                     st.session_state.cur_wheel = None
                     st.session_state.card = None
-                    st.session_state.messages.append({"role": "assistant", "content": tip, "steps": [f"🔧 调用 recommend_nearby_food(keyword={kw!r})"]})
+                    st.session_state.messages.append({"role": "assistant", "content": tip, "steps": [f"[工具] 调用 recommend_nearby_food(keyword={kw!r})"]})
                     st.session_state.history.append({"role": "assistant", "content": tip})
                     st.rerun()
             # 兜底②：用户说“没想法/随便/帮我选”，但模型没弹转盘时，确定性弹第一层转盘

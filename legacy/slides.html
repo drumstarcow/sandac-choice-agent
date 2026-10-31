@@ -132,7 +132,7 @@
 
   <!-- 6 工具调用 -->
   <section class="slide">
-    <h2>🔧 工具调用（已验证真实调用 · 共 8 个）</h2>
+    <h2>工具调用（已验证真实调用 · 共 8 个）</h2>
     <div class="row">
       <span class="tool">build_wheel</span>
       <span class="tool">recommend_nearby_food</span>
@@ -144,11 +144,11 @@
       <span class="tool">share_with_roommate(需确认)</span>
     </div>
     <pre># 模型真实发起的工具调用（0.5B 本地模型实测通过）
-🔧 recommend_nearby_food({'campus':'金海校区','budget':'20','taste':'不辣'})
+[工具] recommend_nearby_food({'campus':'金海校区','budget':'20','taste':'不辣'})
 ↳ 以校区为圆心，haversine 算距，按 距离+性价比+评分 排序：
   🏆 蜜雪冰城 0.05km ￥8 ⭐4.6 综合分0.983
-🔧 save_preference({'key':'dislikes','value':'辣'})  → 先回显确认“要记住你不吃辣，对吗？”
-🔧 get_recent_profile()  → 最近10次聚合出的“近期画像”
+[工具] save_preference({'key':'dislikes','value':'辣'})  → 先回显确认“要记住你不吃辣，对吗？”
+[工具] get_recent_profile()  → 最近10次聚合出的“近期画像”
 
 # 转盘随机化由独立权重概率引擎真实计算（非提示词 if-else）：
 #   抽中衰减 w*=0.6，被拒清零 w=0，归一化 p_i=w_i/Σw，扇区显示该 %</pre>

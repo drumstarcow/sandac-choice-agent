@@ -125,15 +125,19 @@ def log(line):
 
 
 # ------------------------- 工具执行包装 -------------------------
-def _call(name, args, layer=""):
-    """真实执行一次工具，并打印 `[TOOL] tool_calls=1 layer=...` 日志。"""
+def _call(name, args, layer="", source="orchestrator"):
+    """真实执行一次工具，并打印 `[TOOL] ... source=` 日志。
+
+    source 用来区分是谁发起的：model（模型自己决定）/ orchestrator（界面点了某个按钮）
+    / fallback（模型异常后的兜底）。评审只看日志就能判断哪次是模型真调用。
+    """
     try:
         result = tools.call_tool(name, args)
     except Exception as e:                      # 工具异常也不许打崩整场
         result = f"工具 {name} 异常：{e}"
-        log(f"[TOOL] tool_calls=1 layer={layer or '-'} name={name} ERROR={e}")
+        log(f"[TOOL] source={source} tool_calls=1 layer={layer or '-'} name={name} ERROR={e}")
         return None, result
-    log(f"[TOOL] tool_calls=1 layer={layer or '-'} name={name}")
+    log(f"[TOOL] source={source} tool_calls=1 layer={layer or '-'} name={name}")
     try:
         payload = json.loads(result)
     except Exception:
@@ -141,12 +145,12 @@ def _call(name, args, layer=""):
     return payload, result
 
 
-def _wheel(scene, preference="", layer=""):
+def _wheel(scene, preference="", layer="", source="orchestrator"):
     budget = None if SESS.budget in ("不限", "", None) else SESS.budget
     payload, _ = _call("build_wheel", {
         "scene": scene, "preference": preference, "budget": budget,
         "meal_type": SESS.meal_type, "where": SESS.choices.get("where", ""),
-    }, layer=layer or scene)
+    }, layer=layer or scene, source=source)
     if not payload or payload.get("error"):
         return None
     SESS.wheel = payload
@@ -395,11 +399,11 @@ def _fallback(text, reason):
     SESS.fallback_reason = reason
     log(f"[FALLBACK] reason={reason}")
     if any(k in text for k in ("随便", "不知道", "没想法", "你定", "帮我选", "帮我决定")):
-        _wheel("meal", layer="meal")
+        _wheel("meal", layer="meal", source="fallback")
         return [_msg("既然没想法，那不如把选择权交给命运吧 🎰", fallback=True, reason=reason),
                 {"role": "wheel", "wheel": SESS.wheel_view()}]
     payload, _ = _call("search_dish", {"keyword": text.strip(), "meal_type": SESS.meal_type,
-                                       "budget": SESS.budget}, layer="four")
+                                       "budget": SESS.budget}, layer="four", source="fallback")
     if payload and payload.get("groups"):
         SESS.four = payload
         SESS.step = "four"
@@ -430,6 +434,10 @@ def act_chat(text):
     tool_calls = r.get("tool_calls")
     if tool_calls is None:
         tool_calls = len(calls)
+    # 模型这一轮自己发起的工具调用，逐条打 source=model（和界面点击 / 兜底区分开）
+    for c in calls:
+        log(f"[TOOL] source=model tool_calls={tool_calls} layer={r.get('status') or '-'} "
+            f"name={c.get('name', '')}")
     log(f"[CHAT] tool_calls={tool_calls} status={r.get('status')} content_len={len(r.get('content') or '')}")
 
     content = (r.get("content") or "").strip()
@@ -481,7 +489,7 @@ def act_chat(text):
     else:
         # 模型既没调工具、也没说话 → 才算“返回空”，才允许兜底
         if tool_calls == 0 and not content:
-            out.extend(_fallback(text, "模型返回空（无 tool_calls 且无 content）"))
+            out.extend(_fallback(text, f"模型返回空（status={status} tool_calls=0 content=0）"))
         elif not content:
             out.append(_msg("（模型没说话）", calls=calls))
 

@@ -45,7 +45,7 @@ function addWelcome() {
     <ul>
       <li><b>四层转盘</b>：餐别 → 场景 → 口味 → 菜品，概率是真的，拒绝后真的重排</li>
       <li><b>点名直达</b>：说「想吃火锅」就不转盘，直接给四条并排方案</li>
-      <li><b>四条并列</b>：综合最佳 / 最近 / 最便宜 / 评分最高，重复的自动顺延</li>
+      <li><b>四条并列</b>：综合最佳 / 最近 / 最便宜 / 评分最高，同一个不重复上屏</li>
       <li><b>记得你</b>：偏好写进画像，下次按你的口味和预算预过滤</li>
     </ul>
     <div class="w-foot">模型调用与工具调用都是真的 —— 底部那行日志就是每一次 <code>tool_calls</code>。</div>`;
@@ -479,16 +479,21 @@ function renderCard(stage, st) {
   if (st.four && st.four.groups && st.four.groups.length) renderFour(stage, st);
 }
 
+function fourTitle(four) {
+  const n = (four.groups || []).length;
+  return n >= 4 ? '四条并排，你挑一个' : `符合条件的就这 ${n} 条，挑一个`;
+}
+
 function renderFour(stage, st) {
   const four = st.four;
-  stage.appendChild(el('h2', 'stage-title', '四条并排，你挑一个'));
+  stage.appendChild(el('h2', 'stage-title', fourTitle(four)));
   if (four.note) stage.appendChild(el('p', 'stage-sub', esc(four.note)));
   stage.appendChild(fourGrid(four));
 }
 
 function renderFourStage(stage, st) {
   const four = st.four;
-  stage.appendChild(el('h2', 'stage-title', '四条并排，你挑一个'));
+  stage.appendChild(el('h2', 'stage-title', fourTitle(four)));
   if (four.note) stage.appendChild(el('p', 'stage-sub', esc(four.note)));
   stage.appendChild(fourGrid(four));
   const row = el('div', 'row');
