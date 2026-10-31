@@ -446,28 +446,131 @@ def _reason(gkey, c, cands):
 
 
 # ------------------------- 点名直达 -------------------------
-def search_dish(keyword="", meal_type="", budget=None, where="", taste=""):
-    """点名直达：用户说了具体菜名/店名 → 跳过转盘，直接给四条并列方案。
+_LEAD_WORDS = ("我想吃点", "我想吃", "我要吃", "我想来", "我想喝", "想吃点", "想吃", "要吃点",
+               "吃个", "来一份", "来份", "来一个", "来个", "帮我找", "帮我点", "帮我",
+               "有没有", "有没", "附近有", "附近", "今天", "中午", "晚上", "早上",
+               "不要", "不想", "就要吃", "就要", "我")
+_TAIL_CHARS = "吗吧呢啊呀哦嘛的了先啦哟呗"
 
-    关键词同时匹配菜名、店名、招牌、类别、标签、描述。
+# 关键词一点都没沾上时，按「类别线索」找替代（只用于替代，不冒充命中）
+_HINT_TABLE = [
+    (("火锅",), ("锅",)),
+    (("麻辣烫", "麻辣拌", "麻辣"), ("麻辣", "辣")),
+    (("鸡",), ("鸡",)),
+    (("牛",), ("牛",)),
+    (("鱼",), ("鱼",)),
+    (("粥",), ("粥",)),
+    (("面", "粉", "米线"), ("面", "粉", "米线")),
+    (("饭", "盖浇", "盖饭"), ("饭",)),
+    (("饺", "包", "馄饨"), ("饺", "包")),
+    (("烤", "串", "烧烤"), ("烤", "串")),
+    (("甜", "奶", "奶茶", "咖啡"), ("奶", "甜", "咖啡")),
+    (("沙拉", "轻食"), ("沙拉", "轻食")),
+    (("汤",), ("汤",)),
+]
+
+
+def clean_keyword(kw):
+    """把「不要，我想吃黄焖鸡米饭吧」收拾成「黄焖鸡米饭」。"""
+    s = re.sub(r"[\s，。！？、,.!?~～…]+", "", str(kw or ""))
+    leads = sorted(_LEAD_WORDS, key=len, reverse=True)
+    for _ in range(4):                       # 「我 中午 想吃 XXX」可能叠好几层
+        for w in leads:
+            if s.startswith(w) and len(s) > len(w):
+                s = s[len(w):]
+                break
+        else:
+            break
+    while len(s) > 2 and s[-1] in _TAIL_CHARS:
+        s = s[:-1]
+    return s.strip()
+
+
+def match_score(c, kw):
+    """相关性打分：完全同名 > 菜名包含 > 用户说得更长 > 店名 > 标签描述 > 双字覆盖。"""
+    if not kw:
+        return 0
+    name = c.get("name") or ""
+    shop = c.get("shop") or ""
+    if kw == name:
+        return 100
+    if kw in name:
+        return 90
+    if name and name in kw:
+        return 85
+    if kw in shop:
+        return 70
+    meta = shop + (c.get("category") or "") + "".join(c.get("tags") or []) + (c.get("desc") or "")
+    if kw in meta:
+        return 50
+    if len(kw) >= 2:
+        grams = [kw[i:i + 2] for i in range(len(kw) - 1)]
+        hit = sum(1 for g in grams if g in name)
+        if hit / len(grams) >= 0.5:
+            return 30 + int(20 * hit / len(grams))
+    return 0
+
+
+def similar_hints(kw):
+    """按类别找替代线索；没有线索返回空列表。"""
+    outs = []
+    for keys, targets in _HINT_TABLE:
+        if any(k in kw for k in keys):
+            outs.extend(targets)
+    return list(dict.fromkeys(outs))
+
+
+def search_dish(keyword="", meal_type="", budget=None, where="", taste=""):
+    """点名直达：用户说了具体菜名/店名 → 跳过转盘，直接给并列方案。
+
+    命中就给命中项；没收录就**如实说没有**，再给同类替代并标明是替代，
+    绝不把整个候选池冒充成「最接近的方案」。
     """
-    kw = str(keyword or "").strip()
+    kw = clean_keyword(keyword)
     pool_all = candidates(meal_type=meal_type, budget=budget, where=where)
-    hit = []
-    if kw:
-        hit = [c for c in pool_all
-               if kw in (c.get("name", "") + c.get("shop", "") + c.get("category", "")
-                         + " ".join(c.get("tags", [])) + c.get("desc", ""))]
-    if not hit:
-        # 关键词没命中 → 用口味兜一层，仍然给四条，不空手
-        hit = candidates(meal_type=meal_type, spice=taste, budget=budget, where=where)
-        note = f"附近没有正式收录「{kw}」，这是同类里最接近的几套方案。"
-    else:
-        note = f"「{kw}」相关共 {len(hit)} 条"
-    data = json.loads(finalize(hit, criteria_note=note))
+
+    best = max((match_score(c, kw) for c in pool_all), default=0) if kw else 0
+    near = [c for c in pool_all if match_score(c, kw) >= 30] if kw else []
+    near.sort(key=lambda c: -match_score(c, kw))
+    exact = best >= 70                 # 菜名命中，或店名命中（如"火锅"→凑凑火锅）才算真找到
+    matched = bool(kw) and exact
+    hint_words = [] if matched or near else similar_hints(kw)
+
+    if not kw:                          # 没给关键词：正常按条件给四条
+        hits = list(pool_all)
+        hit_count = 0
+        note = ""
+        say = "附近这几家，按四个维度各挑一条 👇"
+    elif matched:
+        hits = near
+        hit_count = len(hits)
+        note = f"「{kw}」相关共 {hit_count} 条"
+        say = f"「{kw}」找到了，按四个维度各挑一条 👇"
+    elif near:                          # 沾边但没这道菜：说清楚是「最接近」
+        hits = near
+        hit_count = 0
+        note = f"菜单里没有「{kw}」，最接近的是"
+        say = f"菜单里没有「{kw}」，最接近的是这几样 👇"
+    elif hint_words:                    # 按类别找同类
+        hits = [c for c in pool_all if any(h in (c.get("name") or "") for h in hint_words)]
+        hits.sort(key=lambda c: -(c.get("rating") or 0))
+        hit_count = 0
+        note = f"菜单里没有「{kw}」，这是同类的替代"
+        say = f"菜单里没有「{kw}」，我不瞎编——按同类给你找了这几样 👇"
+    else:                               # 一点线索都没有：给评分靠前的，如实标注
+        hits = list(pool_all)
+        hits.sort(key=lambda c: -(c.get("rating") or 0))
+        hit_count = 0
+        note = f"菜单里没有「{kw}」，这是今天评分靠前的"
+        say = f"菜单里没有「{kw}」，这几样是今天评分靠前的 👇"
+
+    data = json.loads(finalize(hits, criteria_note=note))
     data["keyword"] = kw
-    data["matched"] = bool(kw and any(
-        kw in (c.get("name", "") + c.get("shop", "")) for c in hit))
+    data["matched"] = matched
+    data["hit_count"] = hit_count
+    data["replaced"] = bool(kw) and not matched
+    data["hint_words"] = hint_words
+    data["say"] = say
     return json.dumps(data, ensure_ascii=False)
 
 

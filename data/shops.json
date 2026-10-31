@@ -2,24 +2,385 @@
   "_说明": "【示例数据】金海校区周边餐饮商铺。坐标为真实地理散布（haversine 真实算距），随真实周边商户替换即可。dish 为该店招牌（作为菜品候选参与四条推荐），meal_type 决定餐别过滤。",
   "near_campus": "金海校区",
   "shops": [
-    {"id": "s01", "name": "蜜雪冰城(金海路)", "dish": "冰鲜柠檬水", "category": "奶茶甜品", "address": "金海路近校西门", "lat": 31.2710, "lng": 121.6690, "rating": 4.6, "avg_price": 8, "tags": ["不辣", "甜", "素"], "meal_type": "dessert", "desc": "柠檬现锤，加冰加糖都实在，一杯四块钱能喝很久，夏天排队的队伍永远最长。", "img": "/plate/s01.svg"},
-    {"id": "s02", "name": "正新鸡排(金海店)", "dish": "招牌鸡排", "category": "小吃", "address": "校门口小吃街", "lat": 31.2705, "lng": 121.6698, "rating": 4.2, "avg_price": 10, "tags": ["不辣", "荤"], "meal_type": "meal", "desc": "现炸出锅，外皮酥得掉渣，肉厚多汁，撒上椒盐边走边吃，是放学路上最难抗拒的。", "img": "/plate/s02.svg"},
-    {"id": "s03", "name": "沪上阿姨(金海店)", "dish": "血糯米奶茶", "category": "奶茶甜品", "address": "金海路沿街", "lat": 31.2715, "lng": 121.6700, "rating": 4.4, "avg_price": 12, "tags": ["不辣", "甜", "素"], "meal_type": "dessert", "desc": "血糯米煮得软糯，奶茶底不算太甜，加一份芋泥更顶饱，下午喝一杯当加餐刚好。", "img": "/plate/s03.svg"},
-    {"id": "s04", "name": "一鸣真鲜奶吧", "dish": "鲜奶+饭团", "category": "早餐饮品", "address": "金海路便利店旁", "lat": 31.2718, "lng": 121.6688, "rating": 4.4, "avg_price": 14, "tags": ["不辣", "甜", "素", "早餐"], "meal_type": "meal", "desc": "鲜奶当日配送，饭团里包着肉松和蛋黄，早上拿一套边走边吃，比食堂更省时间。", "img": "/plate/s04.svg"},
-    {"id": "s05", "name": "沙县小吃(校门口)", "dish": "蒸饺+炖罐", "category": "中式快餐", "address": "校门口小吃街", "lat": 31.2700, "lng": 121.6680, "rating": 4.0, "avg_price": 15, "tags": ["不辣", "荤", "面食"], "meal_type": "meal", "desc": "蒸饺皮薄馅足，配一罐炖得酥烂的排骨，汤鲜味浓，价格十几年没怎么变过。", "img": "/plate/s05.svg"},
-    {"id": "s06", "name": "重庆小面(小吃街)", "dish": "麻辣小面", "category": "面食", "address": "校门口小吃街", "lat": 31.2685, "lng": 121.6725, "rating": 4.0, "avg_price": 16, "tags": ["辣", "荤", "面食", "汤"], "meal_type": "meal", "desc": "红油浮在汤面上，花椒香冲鼻子，面条劲道，加一份豌豆更香，吃完一身汗很爽。", "img": "/plate/s06.svg"},
-    {"id": "s07", "name": "兰州拉面(金海店)", "dish": "牛肉拉面", "category": "清真面食", "address": "金海路中段", "lat": 31.2730, "lng": 121.6700, "rating": 4.3, "avg_price": 18, "tags": ["不辣", "清真", "荤", "面食"], "meal_type": "meal", "desc": "清汤牛肉面，萝卜片炖得透，辣子单独给，不吃辣也能安心吃，面量足管饱。", "img": "/plate/s07.svg"},
-    {"id": "s08", "name": "杨国福麻辣烫", "dish": "自选麻辣烫", "category": "麻辣烫", "address": "小吃街内", "lat": 31.2695, "lng": 121.6715, "rating": 4.1, "avg_price": 20, "tags": ["辣", "素", "汤"], "meal_type": "meal", "desc": "菜品种类多，按重量称，选几样青菜豆腐加个蛋，麻辣汤底一烫，冬天最解馋。", "img": "/plate/s08.svg"},
-    {"id": "s09", "name": "老娘舅(金海店)", "dish": "卤肉饭套餐", "category": "中式快餐", "address": "金海路商业广场", "lat": 31.2720, "lng": 121.6710, "rating": 4.5, "avg_price": 22, "tags": ["不辣", "米饭", "荤"], "meal_type": "meal", "desc": "卤肉炖得入味，一份套餐带汤带青菜，米饭可以续，赶时间又想好好吃一顿就选它。", "img": "/plate/s09.svg"},
-    {"id": "s10", "name": "麦当劳(金海路)", "dish": "麦辣鸡腿堡", "category": "西式快餐", "address": "金海路地铁口", "lat": 31.2690, "lng": 121.6670, "rating": 4.3, "avg_price": 28, "tags": ["辣", "荤"], "meal_type": "meal", "desc": "鸡腿肉厚实，酱料带辣，薯条现炸，配上冰可乐，赶地铁前十分钟就能解决一餐。", "img": "/plate/s10.svg"},
-    {"id": "s11", "name": "老乡鸡(金海店)", "dish": "招牌鸡汤套餐", "category": "中式快餐", "address": "金海路商业广场2楼", "lat": 31.2725, "lng": 121.6685, "rating": 4.5, "avg_price": 26, "tags": ["不辣", "荤", "米饭", "汤"], "meal_type": "meal", "desc": "鸡汤清亮不油，鸡肉炖得嫩，配一荤一素一份饭，吃着像家里做的那种踏实。", "img": "/plate/s11.svg"},
-    {"id": "s12", "name": "川味观(小吃街)", "dish": "水煮鱼片", "category": "川菜", "address": "校门口小吃街", "lat": 31.2680, "lng": 121.6720, "rating": 4.2, "avg_price": 25, "tags": ["辣", "荤"], "meal_type": "meal", "desc": "鱼片滑嫩，红油滚烫，底下垫着豆芽和莴笋，两个人点一份配饭刚好，辣得很正。", "img": "/plate/s12.svg"},
-    {"id": "s13", "name": "凑凑火锅(金海店)", "dish": "番茄锅+大红袍", "category": "火锅", "address": "金海路商业广场3楼", "lat": 31.2728, "lng": 121.6678, "rating": 4.5, "avg_price": 62, "tags": ["辣", "荤", "汤"], "meal_type": "meal", "desc": "番茄锅底熬得浓，毛肚鸭血随涮随吃，人均六十左右，适合考完试组个局庆祝一下。", "img": "/plate/s13.svg"},
-    {"id": "s14", "name": "海底捞(金海路)", "dish": "番茄锅底", "category": "火锅", "address": "金海路地铁口2楼", "lat": 31.2688, "lng": 121.6668, "rating": 4.7, "avg_price": 78, "tags": ["不辣", "荤", "汤"], "meal_type": "meal", "desc": "服务没得挑，番茄锅配虾滑是标配，人均七十多有点肉疼，但过生日来一次很值。", "img": "/plate/s14.svg"},
-    {"id": "s15", "name": "丰茂烤串(小吃街)", "dish": "羊肉串", "category": "烧烤", "address": "校门口小吃街", "lat": 31.2678, "lng": 121.6728, "rating": 4.3, "avg_price": 45, "tags": ["辣", "荤"], "meal_type": "meal", "desc": "炭火现烤，羊肉串肥瘦相间，撒上孜然辣椒面，配一瓶冰啤酒，夏夜坐在路边很惬意。", "img": "/plate/s15.svg"},
-    {"id": "s16", "name": "麻辣香锅(小吃街)", "dish": "自选香锅", "category": "香锅", "address": "小吃街中段", "lat": 31.2692, "lng": 121.6712, "rating": 4.2, "avg_price": 32, "tags": ["辣", "荤", "素"], "meal_type": "meal", "desc": "自选食材按份炒，土豆片炸过再炒更香，麻辣度可以调，两个人分一份加饭刚好。", "img": "/plate/s16.svg"},
-    {"id": "s17", "name": "瑞幸咖啡(金海路)", "dish": "生椰拿铁", "category": "咖啡", "address": "金海路沿街", "lat": 31.2712, "lng": 121.6705, "rating": 4.4, "avg_price": 16, "tags": ["不辣", "甜", "素"], "meal_type": "dessert", "desc": "生椰和咖啡混得顺口，冰的一口下去提神，复习周靠它续命，券后价格更友好。", "img": "/plate/s17.svg"},
-    {"id": "s18", "name": "沙绿轻食(商业广场)", "dish": "鸡胸肉沙拉", "category": "轻食", "address": "金海路商业广场1楼", "lat": 31.2723, "lng": 121.6713, "rating": 4.3, "avg_price": 29, "tags": ["不辣", "素", "荤"], "meal_type": "meal", "desc": "鸡胸煎得不柴，蔬菜新鲜，油醋汁自己浇，吃着清爽不负担，减脂期也能安心点。", "img": "/plate/s18.svg"},
-    {"id": "s19", "name": "永和豆浆(金海路)", "dish": "豆浆+油条", "category": "早餐饮品", "address": "金海路便利店旁", "lat": 31.2719, "lng": 121.6685, "rating": 4.1, "avg_price": 12, "tags": ["不辣", "素", "早餐"], "meal_type": "dessert", "desc": "豆浆热乎，油条刚炸的咬着脆，坐窗边慢慢吃完再去上课，一天的开头就稳了。", "img": "/plate/s19.svg"}
+    {
+      "id": "s01",
+      "name": "蜜雪冰城(金海路)",
+      "dish": "冰鲜柠檬水",
+      "category": "奶茶甜品",
+      "address": "金海路近校西门",
+      "lat": 31.271,
+      "lng": 121.669,
+      "rating": 4.6,
+      "avg_price": 8,
+      "tags": [
+        "不辣",
+        "甜",
+        "素"
+      ],
+      "meal_type": "dessert",
+      "desc": "柠檬现锤，加冰加糖都实在，一杯四块钱能喝很久，夏天排队的队伍永远最长。",
+      "img": "/plate/s01.svg"
+    },
+    {
+      "id": "s02",
+      "name": "正新鸡排(金海店)",
+      "dish": "招牌鸡排",
+      "category": "小吃",
+      "address": "校门口小吃街",
+      "lat": 31.2705,
+      "lng": 121.6698,
+      "rating": 4.2,
+      "avg_price": 10,
+      "tags": [
+        "不辣",
+        "荤"
+      ],
+      "meal_type": "meal",
+      "desc": "现炸出锅，外皮酥得掉渣，肉厚多汁，撒上椒盐边走边吃，是放学路上最难抗拒的。",
+      "img": "/plate/s02.svg"
+    },
+    {
+      "id": "s03",
+      "name": "沪上阿姨(金海店)",
+      "dish": "血糯米奶茶",
+      "category": "奶茶甜品",
+      "address": "金海路沿街",
+      "lat": 31.2715,
+      "lng": 121.67,
+      "rating": 4.4,
+      "avg_price": 12,
+      "tags": [
+        "不辣",
+        "甜",
+        "素"
+      ],
+      "meal_type": "dessert",
+      "desc": "血糯米煮得软糯，奶茶底不算太甜，加一份芋泥更顶饱，下午喝一杯当加餐刚好。",
+      "img": "/plate/s03.svg"
+    },
+    {
+      "id": "s04",
+      "name": "一鸣真鲜奶吧",
+      "dish": "鲜奶+饭团",
+      "category": "早餐饮品",
+      "address": "金海路便利店旁",
+      "lat": 31.2718,
+      "lng": 121.6688,
+      "rating": 4.4,
+      "avg_price": 14,
+      "tags": [
+        "不辣",
+        "甜",
+        "素",
+        "早餐"
+      ],
+      "meal_type": "meal",
+      "desc": "鲜奶当日配送，饭团里包着肉松和蛋黄，早上拿一套边走边吃，比食堂更省时间。",
+      "img": "/plate/s04.svg"
+    },
+    {
+      "id": "s05",
+      "name": "沙县小吃(校门口)",
+      "dish": "蒸饺+炖罐",
+      "category": "中式快餐",
+      "address": "校门口小吃街",
+      "lat": 31.27,
+      "lng": 121.668,
+      "rating": 4.0,
+      "avg_price": 15,
+      "tags": [
+        "不辣",
+        "荤",
+        "面食"
+      ],
+      "meal_type": "meal",
+      "desc": "蒸饺皮薄馅足，配一罐炖得酥烂的排骨，汤鲜味浓，价格十几年没怎么变过。",
+      "img": "/plate/s05.svg"
+    },
+    {
+      "id": "s06",
+      "name": "重庆小面(小吃街)",
+      "dish": "麻辣小面",
+      "category": "面食",
+      "address": "校门口小吃街",
+      "lat": 31.2685,
+      "lng": 121.6725,
+      "rating": 4.0,
+      "avg_price": 16,
+      "tags": [
+        "辣",
+        "荤",
+        "面食",
+        "汤"
+      ],
+      "meal_type": "meal",
+      "desc": "红油浮在汤面上，花椒香冲鼻子，面条劲道，加一份豌豆更香，吃完一身汗很爽。",
+      "img": "/plate/s06.svg"
+    },
+    {
+      "id": "s07",
+      "name": "兰州拉面(金海店)",
+      "dish": "牛肉拉面",
+      "category": "清真面食",
+      "address": "金海路中段",
+      "lat": 31.273,
+      "lng": 121.67,
+      "rating": 4.3,
+      "avg_price": 18,
+      "tags": [
+        "不辣",
+        "清真",
+        "荤",
+        "面食"
+      ],
+      "meal_type": "meal",
+      "desc": "清汤牛肉面，萝卜片炖得透，辣子单独给，不吃辣也能安心吃，面量足管饱。",
+      "img": "/plate/s07.svg"
+    },
+    {
+      "id": "s08",
+      "name": "杨国福麻辣烫",
+      "dish": "自选麻辣烫",
+      "category": "麻辣烫",
+      "address": "小吃街内",
+      "lat": 31.2695,
+      "lng": 121.6715,
+      "rating": 4.1,
+      "avg_price": 20,
+      "tags": [
+        "辣",
+        "素",
+        "汤"
+      ],
+      "meal_type": "meal",
+      "desc": "菜品种类多，按重量称，选几样青菜豆腐加个蛋，麻辣汤底一烫，冬天最解馋。",
+      "img": "/plate/s08.svg"
+    },
+    {
+      "id": "s09",
+      "name": "老娘舅(金海店)",
+      "dish": "卤肉饭套餐",
+      "category": "中式快餐",
+      "address": "金海路商业广场",
+      "lat": 31.272,
+      "lng": 121.671,
+      "rating": 4.5,
+      "avg_price": 22,
+      "tags": [
+        "不辣",
+        "米饭",
+        "荤"
+      ],
+      "meal_type": "meal",
+      "desc": "卤肉炖得入味，一份套餐带汤带青菜，米饭可以续，赶时间又想好好吃一顿就选它。",
+      "img": "/plate/s09.svg"
+    },
+    {
+      "id": "s10",
+      "name": "麦当劳(金海路)",
+      "dish": "麦辣鸡腿堡",
+      "category": "西式快餐",
+      "address": "金海路地铁口",
+      "lat": 31.269,
+      "lng": 121.667,
+      "rating": 4.3,
+      "avg_price": 28,
+      "tags": [
+        "辣",
+        "荤"
+      ],
+      "meal_type": "meal",
+      "desc": "鸡腿肉厚实，酱料带辣，薯条现炸，配上冰可乐，赶地铁前十分钟就能解决一餐。",
+      "img": "/plate/s10.svg"
+    },
+    {
+      "id": "s11",
+      "name": "老乡鸡(金海店)",
+      "dish": "招牌鸡汤套餐",
+      "category": "中式快餐",
+      "address": "金海路商业广场2楼",
+      "lat": 31.2725,
+      "lng": 121.6685,
+      "rating": 4.5,
+      "avg_price": 26,
+      "tags": [
+        "不辣",
+        "荤",
+        "米饭",
+        "汤"
+      ],
+      "meal_type": "meal",
+      "desc": "鸡汤清亮不油，鸡肉炖得嫩，配一荤一素一份饭，吃着像家里做的那种踏实。",
+      "img": "/plate/s11.svg"
+    },
+    {
+      "id": "s12",
+      "name": "川味观(小吃街)",
+      "dish": "水煮鱼片",
+      "category": "川菜",
+      "address": "校门口小吃街",
+      "lat": 31.268,
+      "lng": 121.672,
+      "rating": 4.2,
+      "avg_price": 25,
+      "tags": [
+        "辣",
+        "荤"
+      ],
+      "meal_type": "meal",
+      "desc": "鱼片滑嫩，红油滚烫，底下垫着豆芽和莴笋，两个人点一份配饭刚好，辣得很正。",
+      "img": "/plate/s12.svg"
+    },
+    {
+      "id": "s13",
+      "name": "凑凑火锅(金海店)",
+      "dish": "番茄锅+大红袍",
+      "category": "火锅",
+      "address": "金海路商业广场3楼",
+      "lat": 31.2728,
+      "lng": 121.6678,
+      "rating": 4.5,
+      "avg_price": 62,
+      "tags": [
+        "辣",
+        "荤",
+        "汤"
+      ],
+      "meal_type": "meal",
+      "desc": "番茄锅底熬得浓，毛肚鸭血随涮随吃，人均六十左右，适合考完试组个局庆祝一下。",
+      "img": "/plate/s13.svg"
+    },
+    {
+      "id": "s14",
+      "name": "海底捞(金海路)",
+      "dish": "番茄锅底",
+      "category": "火锅",
+      "address": "金海路地铁口2楼",
+      "lat": 31.2688,
+      "lng": 121.6668,
+      "rating": 4.7,
+      "avg_price": 78,
+      "tags": [
+        "不辣",
+        "荤",
+        "汤"
+      ],
+      "meal_type": "meal",
+      "desc": "服务没得挑，番茄锅配虾滑是标配，人均七十多有点肉疼，但过生日来一次很值。",
+      "img": "/plate/s14.svg"
+    },
+    {
+      "id": "s15",
+      "name": "丰茂烤串(小吃街)",
+      "dish": "羊肉串",
+      "category": "烧烤",
+      "address": "校门口小吃街",
+      "lat": 31.2678,
+      "lng": 121.6728,
+      "rating": 4.3,
+      "avg_price": 45,
+      "tags": [
+        "辣",
+        "荤"
+      ],
+      "meal_type": "meal",
+      "desc": "炭火现烤，羊肉串肥瘦相间，撒上孜然辣椒面，配一瓶冰啤酒，夏夜坐在路边很惬意。",
+      "img": "/plate/s15.svg"
+    },
+    {
+      "id": "s16",
+      "name": "麻辣香锅(小吃街)",
+      "dish": "自选香锅",
+      "category": "香锅",
+      "address": "小吃街中段",
+      "lat": 31.2692,
+      "lng": 121.6712,
+      "rating": 4.2,
+      "avg_price": 32,
+      "tags": [
+        "辣",
+        "荤",
+        "素"
+      ],
+      "meal_type": "meal",
+      "desc": "自选食材按份炒，土豆片炸过再炒更香，麻辣度可以调，两个人分一份加饭刚好。",
+      "img": "/plate/s16.svg"
+    },
+    {
+      "id": "s17",
+      "name": "瑞幸咖啡(金海路)",
+      "dish": "生椰拿铁",
+      "category": "咖啡",
+      "address": "金海路沿街",
+      "lat": 31.2712,
+      "lng": 121.6705,
+      "rating": 4.4,
+      "avg_price": 16,
+      "tags": [
+        "不辣",
+        "甜",
+        "素"
+      ],
+      "meal_type": "dessert",
+      "desc": "生椰和咖啡混得顺口，冰的一口下去提神，复习周靠它续命，券后价格更友好。",
+      "img": "/plate/s17.svg"
+    },
+    {
+      "id": "s18",
+      "name": "沙绿轻食(商业广场)",
+      "dish": "鸡胸肉沙拉",
+      "category": "轻食",
+      "address": "金海路商业广场1楼",
+      "lat": 31.2723,
+      "lng": 121.6713,
+      "rating": 4.3,
+      "avg_price": 29,
+      "tags": [
+        "不辣",
+        "素",
+        "荤"
+      ],
+      "meal_type": "meal",
+      "desc": "鸡胸煎得不柴，蔬菜新鲜，油醋汁自己浇，吃着清爽不负担，减脂期也能安心点。",
+      "img": "/plate/s18.svg"
+    },
+    {
+      "id": "s19",
+      "name": "永和豆浆(金海路)",
+      "dish": "豆浆+油条",
+      "category": "早餐饮品",
+      "address": "金海路便利店旁",
+      "lat": 31.2719,
+      "lng": 121.6685,
+      "rating": 4.1,
+      "avg_price": 12,
+      "tags": [
+        "不辣",
+        "素",
+        "早餐"
+      ],
+      "meal_type": "dessert",
+      "desc": "豆浆热乎，油条刚炸的咬着脆，坐窗边慢慢吃完再去上课，一天的开头就稳了。",
+      "img": "/plate/s19.svg"
+    },
+    {
+      "id": "s20",
+      "name": "黄焖鸡米饭(小吃街)",
+      "dish": "招牌黄焖鸡米饭",
+      "category": "快餐简餐",
+      "address": "校东门小吃街中段",
+      "lat": 31.2726,
+      "lng": 121.6712,
+      "rating": 4.4,
+      "avg_price": 20,
+      "tags": [
+        "微辣",
+        "荤",
+        "米饭"
+      ],
+      "meal_type": "meal",
+      "desc": "砂锅现焖，鸡腿肉给得实在，加饭不要钱，饭点排队要等五六分钟。",
+      "img": "/plate/s20.svg"
+    }
   ]
 }

@@ -407,7 +407,7 @@ def _fallback(text, reason):
     if payload and payload.get("groups"):
         SESS.four = payload
         SESS.step = "four"
-        return [_msg("按你说的，我拉了四条并排给你 👇", fallback=True, reason=reason),
+        return [_msg(payload.get("say") or "按你说的，我拉了四条并排给你 👇", fallback=True, reason=reason),
                 {"role": "four", "four": payload}]
     return [_msg("我这边没接上，你再说一遍？或者直接说「随便」让我转盘。",
                  fallback=True, reason=reason)]
@@ -485,7 +485,7 @@ def act_chat(text):
         SESS.step = "four"
         out.append({"role": "four", "four": four})
         if not content:
-            out.append(_msg("附近这几家，按四个维度各挑了一条 👇", calls=calls))
+            out.append(_msg(four.get("say") or "附近这几家，按四个维度各挑了一条 👇", calls=calls))
     else:
         # 模型既没调工具、也没说话 → 才算“返回空”，才允许兜底
         if tool_calls == 0 and not content:

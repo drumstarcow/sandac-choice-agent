@@ -15,6 +15,8 @@ const COLORS = ['#E8622C', '#F5A623', '#7FA05B', '#C0574E', '#8E6BBF', '#3F8FA6'
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let STATE = null;
 let BUSY = false;
+let WHEEL_CTX = null;      // 当前转盘的画布与选项（演示时要在同一块画布上真转）
+let DEMO_STOP = false;     // 演示中途可点按钮停止
 
 const $ = s => document.querySelector(s);
 const el = (tag, cls, html) => {
@@ -121,6 +123,7 @@ function renderPref() {
 function renderStage() {
   const stage = $('#stage');
   stage.innerHTML = '';
+  WHEEL_CTX = null;                 // 画面重建后旧的画布句柄作废，避免演示转到已销毁的 canvas
   const st = STATE || {};
   stage.appendChild(crumbs(st));
 
@@ -221,6 +224,7 @@ function renderWheel(stage, st) {
   stage.appendChild(actions);
 
   drawWheel(cv, w.options, 0, -1);
+  WHEEL_CTX = { canvas: cv, options: w.options, scene: w.scene };
 
   let picked = null;
   center.onclick = async () => {
@@ -330,13 +334,24 @@ function drawWheel(canvas, opts, rot, sel) {
 function spinAnim(canvas, opts, target, dur) {
   return new Promise(resolve => {
     const t0 = performance.now();
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      drawWheel(canvas, opts, target, -1);
+      resolve();
+    };
     const step = t => {
+      if (done) return;
       const p = Math.min(1, (t - t0) / dur);
       const e = 1 - Math.pow(1 - p, 3);
       drawWheel(canvas, opts, target * e, -1);
-      if (p < 1) requestAnimationFrame(step); else resolve();
+      if (p < 1) requestAnimationFrame(step); else finish();
     };
     requestAnimationFrame(step);
+    // 兜底：窗口最小化 / 后台标签页 / 无头渲染时 rAF 可能不再产生新帧，
+    // 只靠 rAF 会把整场演示卡死在半途，这里用定时器保证一定能收尾。
+    setTimeout(finish, dur + 400);
   });
 }
 
@@ -481,6 +496,12 @@ function renderCard(stage, st) {
 
 function fourTitle(four) {
   const n = (four.groups || []).length;
+  if (four.keyword && four.matched === false) {
+    return `没有「${four.keyword}」，换成这些？`;
+  }
+  if (four.keyword && four.matched) {
+    return `「${four.keyword}」有 ${n} 个，挑一个`;
+  }
   return n >= 4 ? '四条并排，你挑一个' : `符合条件的就这 ${n} 条，挑一个`;
 }
 
@@ -609,32 +630,106 @@ async function send() {
   }
 }
 
-/* ============ 一键演示（固定序列，每步 1.5 秒） ============ */
+/* ============ 一键演示 ============
+   早期版本只是把服务端状态一步步推过去，画面直接跳到结果，看起来像"假演示"。
+   现在改成：在真实画布上把每一次转动播完再推进 —— 演示过程 = 真人操作的录放。 */
+
+async function demoTurnTo(key, ms = 2200) {
+  const ctx = WHEEL_CTX;
+  if (!ctx || !ctx.canvas || !ctx.canvas.isConnected) return false;
+  const opts = ctx.options || [];
+  const i = opts.findIndex(o => o.key === key);
+  if (i < 0) return false;
+  const n = opts.length;
+  const target = -(i + 0.5) * (Math.PI * 2 / n) + Math.PI * 8;
+  await spinAnim(ctx.canvas, opts, target, ms);
+  drawWheel(ctx.canvas, opts, target, i);
+  syncProbs({ options: opts, scene: ctx.scene, pickedIndex: i });
+  const legend = document.querySelectorAll('.prob')[i];
+  if (legend) legend.classList.add('hit');
+  addSys(`指针停在「${key}」`);
+  return true;
+}
+
+async function demoAccept(key) {
+  const r = await API.post('/api/accept', { key });
+  if (r.note) addSys(r.note);
+  await refresh();
+  return r;
+}
+
 async function runDemo() {
   if (BUSY) return;
   BUSY = true;
-  $('#btnDemo').disabled = true;
-  await API.post('/api/reset');            // 每次演示都从干净状态起，重播也一致
-  addSys('▶ 一键演示开始：餐别=正餐 → 场景=食堂 → 口味=辣 → 抽中A → 拒绝A → 重抽B → 四条推荐 → 收尾');
-  for (let i = 0; i < 12; i++) {
-    let r;
-    try {
-      r = await API.post('/api/demo/next');
-    } catch (e) {
-      addSys('演示中断：' + e.message);
-      break;
-    }
-    if (r.done) { addSys('✅ 演示结束。'); break; }
-    const ok = r.ok ? '' : '（这一步出错，已跳过，继续下一步）';
-    addSys(`[${r.index + 1}/${r.total}] ${r.label}${ok}`);
+  DEMO_STOP = false;
+  const btn = $('#btnDemo');
+  btn.textContent = '■ 停止演示';
+  btn.onclick = () => { DEMO_STOP = true; };
+  let step = 0;
+  const TOTAL = 8;
+  const tell = t => { step += 1; addSys(`[${step}/${TOTAL}] ${t}`); };
+
+  try {
+    await API.post('/api/reset');
+    await API.post('/api/start');
     await refresh();
-    if (r.payload && r.payload.wheel && r.payload.wheel.picked) {
-      await sleep(300);
-    }
+    addSys('▶ 一键演示开始：每一层都真的转、真的算，拒绝之后概率会真的重排。');
+    await sleep(700);
+
+    tell('第 0 层 · 餐别：正餐 / 甜品饮料 / 随便，三份等概率');
+    await demoTurnTo('正餐'); await sleep(800);
+    if (DEMO_STOP) return;
+    await demoAccept('正餐'); await sleep(700);
+
+    tell('第 1 层 · 场景：食堂 / 外面吃');
+    await demoTurnTo('食堂'); await sleep(800);
+    if (DEMO_STOP) return;
+    await demoAccept('食堂'); await sleep(700);
+
+    tell('第 2 层 · 口味：辣 / 不辣 / 随便');
+    await demoTurnTo('辣'); await sleep(800);
+    if (DEMO_STOP) return;
+    await demoAccept('辣'); await sleep(900);
+
+    const st0 = STATE || {};
+    const poolN = (st0.wheel && st0.wheel.items || []).length;
+    tell(`第 3 层 · 菜品格子：从 ${poolN || '这'} 道里真随机抽一次，看它逐格跳`);
+    let s = await API.post('/api/spin');
+    if (s.wheel) { await jumpTo(s.wheel); }
+    await sleep(1000);
+    if (DEMO_STOP) return;
+
+    const first = (s.wheel || {}).picked || '刚才那道';
+    tell(`拒绝「${first}」：它的权重清零，剩下的重新归一化`);
+    await API.post('/api/reject', { key: first });
+    await refresh();
     await sleep(1500);
+    if (DEMO_STOP) return;
+
+    tell('再抽一次（被拒的那道已经不在池子里）');
+    s = await API.post('/api/spin');
+    if (s.wheel) { await jumpTo(s.wheel); }
+    await sleep(1000);
+    if (DEMO_STOP) return;
+
+    tell(`接受「${(s.wheel || {}).picked || ''}」，出美食名片 + 四条并列对比`);
+    await API.post('/api/accept', { key: (s.wheel || {}).picked });
+    await refresh();
+    await sleep(1600);
+    if (DEMO_STOP) return;
+
+    tell('让模型现写一句打卡文案，并把今天的选择落盘');
+    await API.post('/api/finalize');
+    await refresh();
+    addSys('✅ 演示结束。上面每一次转动、每一次概率变化，都是后端真算出来的。');
+  } catch (e) {
+    addSys('演示中断：' + e.message);
+  } finally {
+    BUSY = false;
+    DEMO_STOP = false;
+    btn.textContent = '▶ 一键演示';
+    btn.onclick = runDemo;
   }
-  BUSY = false;
-  $('#btnDemo').disabled = false;
 }
 
 /* ============ 聊天气泡 ============ */
