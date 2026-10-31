@@ -206,8 +206,13 @@ async function jumpLayer(scene, label) {
   } finally {
     BUSY = false;
   }
-  if (r && r.note) addSys(r.note);
-  else addSys(`已经把「${label}」这一层调出来了。`);
+  if (r && r.error) {
+    addSys(`这一层没打开：${r.error}`);
+  } else if (r && r.note) {
+    addSys(r.note);
+  } else {
+    addSys(`已经把「${label}」这一层调出来了。`);
+  }
   await refresh();
 }
 
