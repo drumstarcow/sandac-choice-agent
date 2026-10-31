@@ -1,0 +1,66 @@
+<Slide style={{ width: 1280, height: 720, background: '#FDF7EF', padding: 60, flexDirection: 'column', fontFamily: 'Microsoft YaHei' }}>
+    <Box style={{ flexDirection: 'column' }}>
+        <Text style={{ fontSize: 14, color: '#E8622C', letterSpacing: 3, fontWeight: 'bold' }}>07 · 它是怎么跑起来的</Text>
+        <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#2B1D14', marginTop: 10 }}>模型负责听懂人话，状态机负责每一层都对</Text>
+        <Box style={{ height: 1, background: '#E2D3C2', marginTop: 16 }} />
+    </Box>
+
+    <Box style={{ flexDirection: 'column', marginTop: 22 }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', height: 58, borderBottom: '1px solid #E2D3C2' }}>
+            <Box style={{ width: 150 }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#2B1D14' }}>用户层</Text>
+            </Box>
+            <Text style={{ width: 200, fontSize: 16, color: '#8A7A6B' }}>你</Text>
+            <Text style={{ flex: 1, fontSize: 16, color: '#3A2E24', lineHeight: 1.45 }}>「随便，你定」—— 一句话就够，不用想菜单</Text>
+        </Box>
+
+        <Box style={{ flexDirection: 'row', alignItems: 'center', height: 58, borderBottom: '1px solid #E2D3C2' }}>
+            <Box style={{ width: 150 }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#2B1D14' }}>界面层</Text>
+            </Box>
+            <Text style={{ width: 200, fontSize: 16, color: '#8A7A6B' }}>ui/ 桌面窗口</Text>
+            <Text style={{ flex: 1, fontSize: 16, color: '#3A2E24', lineHeight: 1.45 }}>原生 HTML + Canvas 转盘，零第三方框架</Text>
+        </Box>
+
+        <Box style={{ flexDirection: 'row', alignItems: 'center', height: 58, borderBottom: '1px solid #E2D3C2' }}>
+            <Box style={{ width: 150 }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#E8622C' }}>决策层</Text>
+            </Box>
+            <Text style={{ width: 200, fontSize: 16, color: '#8A7A6B' }}>server.py 状态机</Text>
+            <Text style={{ flex: 1, fontSize: 16, color: '#3A2E24', lineHeight: 1.45 }}>五层往哪走由它决定，不靠模型猜下一步</Text>
+        </Box>
+
+        <Box style={{ flexDirection: 'row', alignItems: 'center', height: 58, borderBottom: '1px solid #E2D3C2' }}>
+            <Box style={{ width: 150 }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#2B1D14' }}>模型层</Text>
+            </Box>
+            <Text style={{ width: 200, fontSize: 16, color: '#8A7A6B' }}>agent.py · DeepSeek</Text>
+            <Text style={{ flex: 1, fontSize: 16, color: '#3A2E24', lineHeight: 1.45 }}>OpenAI 兼容接口，云端失败自动回退本地 Ollama</Text>
+        </Box>
+
+        <Box style={{ flexDirection: 'row', alignItems: 'center', height: 58, borderBottom: '1px solid #E2D3C2' }}>
+            <Box style={{ width: 150 }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#2B1D14' }}>能力层</Text>
+            </Box>
+            <Text style={{ width: 200, fontSize: 16, color: '#8A7A6B' }}>tools.py · 10 个工具</Text>
+            <Text style={{ flex: 1, fontSize: 16, color: '#3A2E24', lineHeight: 1.45 }}>build_wheel / search_dish / finalize_decision … 共 10 个</Text>
+        </Box>
+
+        <Box style={{ flexDirection: 'row', alignItems: 'center', height: 58, borderBottom: '1px solid #E2D3C2' }}>
+            <Box style={{ width: 150 }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#2B1D14' }}>数据层</Text>
+            </Box>
+            <Text style={{ width: 200, fontSize: 16, color: '#8A7A6B' }}>data/ + skills/</Text>
+            <Text style={{ flex: 1, fontSize: 16, color: '#3A2E24', lineHeight: 1.45 }}>63 道食堂菜 + 111 家商户 = 174 个候选，断网也能跑</Text>
+        </Box>
+    </Box>
+
+    <Box style={{ flexDirection: 'row', alignItems: 'center', height: 54, marginTop: 18, background: '#F4E3D3', borderRadius: 8, padding: '0 20px' }}>
+        <Text style={{ fontSize: 16, color: '#2B1D14' }}>写文件、改长期记忆这类动作必须先确认；<span style={{ fontWeight: 'bold' }}>云端不可用时自动降级本地模型</span>，界面会提示。</Text>
+    </Box>
+
+    <Box style={{ position: 'absolute', left: 60, right: 60, bottom: 26, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>吃饱饱助手 · 校园吃饭决策智能体</Text>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>08 / 12</Text>
+    </Box>
+</Slide>

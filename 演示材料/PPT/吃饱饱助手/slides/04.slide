@@ -1,0 +1,88 @@
+<Slide style={{ width: 1280, height: 720, background: '#FDF7EF', padding: 60, flexDirection: 'column', fontFamily: 'Microsoft YaHei' }}>
+    <Box style={{ flexDirection: 'column' }}>
+        <Text style={{ fontSize: 14, color: '#E8622C', letterSpacing: 3, fontWeight: 'bold' }}>03 · 核心机制</Text>
+        <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#2B1D14', marginTop: 10 }}>把「选择」拆成五次抛硬币</Text>
+        <Text style={{ fontSize: 18, color: '#8A7A6B', lineHeight: 1.5, marginTop: 12 }}>每一层只问一个特别小的问题，小到你不用思考 —— 五次之后就只剩一个答案。这五次都是真随机，不是从推荐列表里挑一个。</Text>
+        <Box style={{ height: 1, background: '#E2D3C2', marginTop: 16 }} />
+    </Box>
+
+    <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center' }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box style={{ width: 204, flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C', letterSpacing: 1 }}>L0 · 吃什么类型</Text>
+                <Box style={{ width: 204, height: 116, background: '#FFFFFF', border: '1px solid #E2D3C2', borderRadius: 10, padding: 16, flexDirection: 'column', justifyContent: 'center', gap: 8 }}>
+                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#2B1D14' }}>餐别</Text>
+                    <Text style={{ fontSize: 16, color: '#8A7A6B', lineHeight: 1.35 }}>2 个扇区</Text>
+                </Box>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>正餐 / 甜品饮料</Text>
+            </Box>
+
+            <Text style={{ fontSize: 22, color: '#C9BCA8' }}>→</Text>
+
+            <Box style={{ width: 204, flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C', letterSpacing: 1 }}>L1 · 在哪吃</Text>
+                <Box style={{ width: 204, height: 116, background: '#FFFFFF', border: '1px solid #E2D3C2', borderRadius: 10, padding: 16, flexDirection: 'column', justifyContent: 'center', gap: 8 }}>
+                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#2B1D14' }}>场景</Text>
+                    <Text style={{ fontSize: 16, color: '#8A7A6B', lineHeight: 1.35 }}>食堂 / 外面 / 外卖</Text>
+                </Box>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>3 个扇区</Text>
+            </Box>
+
+            <Text style={{ fontSize: 22, color: '#C9BCA8' }}>→</Text>
+
+            <Box style={{ width: 204, flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C', letterSpacing: 1 }}>L2 · 吃什么味</Text>
+                <Box style={{ width: 204, height: 116, background: '#FFFFFF', border: '1px solid #E2D3C2', borderRadius: 10, padding: 16, flexDirection: 'column', justifyContent: 'center', gap: 8 }}>
+                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#2B1D14' }}>口味</Text>
+                    <Text style={{ fontSize: 16, color: '#8A7A6B', lineHeight: 1.35 }}>辣 / 不辣</Text>
+                </Box>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>甜品这层自动跳过</Text>
+            </Box>
+
+            <Text style={{ fontSize: 22, color: '#C9BCA8' }}>→</Text>
+
+            <Box style={{ width: 204, flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C', letterSpacing: 1 }}>L3 · 吃哪一类</Text>
+                <Box style={{ width: 204, height: 116, background: '#FFFFFF', border: '1px solid #E2D3C2', borderRadius: 10, padding: 16, flexDirection: 'column', justifyContent: 'center', gap: 8 }}>
+                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#2B1D14' }}>菜系</Text>
+                    <Text style={{ fontSize: 16, color: '#8A7A6B', lineHeight: 1.35 }}>13 类，按真实分布</Text>
+                </Box>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>按候选实际数量</Text>
+            </Box>
+
+            <Text style={{ fontSize: 22, color: '#C9BCA8' }}>→</Text>
+
+            <Box style={{ width: 204, flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C', letterSpacing: 1 }}>L4 · 落到一道菜</Text>
+                <Box style={{ width: 204, height: 116, background: '#E8622C', borderRadius: 10, padding: 16, flexDirection: 'column', justifyContent: 'center', gap: 8 }}>
+                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#FFFFFF' }}>菜品</Text>
+                    <Text style={{ fontSize: 16, color: '#FDEEE5', lineHeight: 1.35 }}>174 个候选全上盘</Text>
+                </Box>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>一个菜名</Text>
+            </Box>
+        </Box>
+
+        <Box style={{ flexDirection: 'column', marginTop: 44 }}>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 24, padding: '14px 0', borderTop: '1px solid #E2D3C2' }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C' }}>01</Text>
+                <Text style={{ width: 120, fontSize: 18, fontWeight: 'bold', color: '#2B1D14' }}>真随机</Text>
+                <Text style={{ flex: 1, fontSize: 16, color: '#3A2E24', lineHeight: 1.5 }}>174 个候选一个都不截断。之前按评分只留前 24 个，等于偷偷删掉了 86% 的选项。</Text>
+            </Box>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 24, padding: '14px 0', borderTop: '1px solid #E2D3C2' }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C' }}>02</Text>
+                <Text style={{ width: 120, fontSize: 18, fontWeight: 'bold', color: '#2B1D14' }}>可拒绝</Text>
+                <Text style={{ flex: 1, fontSize: 16, color: '#3A2E24', lineHeight: 1.5 }}>拒掉的选项权重清零、本次会话永不复活，剩下的重新归一化，扇区上的百分比当场变。</Text>
+            </Box>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 24, padding: '14px 0', borderTop: '1px solid #E2D3C2' }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C' }}>03</Text>
+                <Text style={{ width: 120, fontSize: 18, fontWeight: 'bold', color: '#2B1D14' }}>元选项不上盘</Text>
+                <Text style={{ flex: 1, fontSize: 16, color: '#3A2E24', lineHeight: 1.5 }}>「随便」不是一个能被抽中的结果，是「这层我不要了」的操作 —— 所以它站在盘外，不占扇区。</Text>
+            </Box>
+        </Box>
+    </Box>
+
+    <Box style={{ position: 'absolute', left: 60, right: 60, bottom: 26, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>吃饱饱助手 · 校园吃饭决策智能体</Text>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>04 / 12</Text>
+    </Box>
+</Slide>

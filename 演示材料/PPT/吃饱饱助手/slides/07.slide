@@ -1,0 +1,37 @@
+<Slide style={{ width: 1280, height: 720, background: '#FDF7EF', padding: 60, flexDirection: 'column', fontFamily: 'Microsoft YaHei' }}>
+    <Box style={{ flexDirection: 'column' }}>
+        <Text style={{ fontSize: 14, color: '#E8622C', letterSpacing: 3, fontWeight: 'bold' }}>06 · 收尾</Text>
+        <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#2B1D14', marginTop: 10 }}>转完之后，给你四条并排的方案</Text>
+        <Box style={{ height: 1, background: '#E2D3C2', marginTop: 16 }} />
+    </Box>
+
+    <Box style={{ flexDirection: 'row', gap: 36, marginTop: 20 }}>
+        <Box style={{ width: 576, height: 480, background: '#FFFFFF', border: '1px solid #E2D3C2', borderRadius: 10, padding: 6 }}>
+            <Image src="assets/shop_compare.png" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
+        </Box>
+
+        <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', gap: 22 }}>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#2B1D14', lineHeight: 1.5 }}>同一份数据，四个维度各挑一条：<br />综合最佳 / 最近 / 最便宜 / 评分最高。</Text>
+
+            <Box style={{ flexDirection: 'column', gap: 6 }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#E8622C' }}>不是四段 if-else</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.55 }}>同一个 finalize() 按四个排序键各取一条，还自动去重。</Text>
+            </Box>
+
+            <Box style={{ flexDirection: 'column', gap: 6 }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#E8622C' }}>一道菜只占一个格子</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.55 }}>三家的「冰鲜柠檬水」合成一格。同名单菜占三个坑，等于把「抽哪道菜」偷偷变成「抽哪家店」。</Text>
+            </Box>
+
+            <Box style={{ flexDirection: 'column', gap: 6 }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#E8622C' }}>选完菜，四条切换成「比店」</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.55 }}>这道菜几家都在卖，那四条就变成去哪家更值：顾唐路 ¥7 走 8 分钟、三信广场 ¥10 走 6 分钟。</Text>
+            </Box>
+        </Box>
+    </Box>
+
+    <Box style={{ position: 'absolute', left: 60, right: 60, bottom: 26, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>吃饱饱助手 · 校园吃饭决策智能体</Text>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>07 / 12</Text>
+    </Box>
+</Slide>

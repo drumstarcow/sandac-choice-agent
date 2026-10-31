@@ -1,0 +1,59 @@
+<Slide style={{ width: 1280, height: 720, background: '#FDF7EF', padding: 60, flexDirection: 'column', fontFamily: 'Microsoft YaHei' }}>
+    <Box style={{ flexDirection: 'column' }}>
+        <Text style={{ fontSize: 14, color: '#E8622C', letterSpacing: 3, fontWeight: 'bold' }}>08 · 增量在哪</Text>
+        <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#2B1D14', marginTop: 10 }}>用了课上哪几块，自己又加了什么</Text>
+        <Box style={{ height: 1, background: '#E2D3C2', marginTop: 16 }} />
+    </Box>
+
+    <Box style={{ height: 424, marginTop: 22, background: '#FFFFFF', border: '1px solid #E2D3C2', borderRadius: 10, padding: 8 }}>
+        <Table
+            style={{ width: '100%', height: '100%' }}
+            defaultTextStyle={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.45 }}
+            defaultCellStyle={{
+                border: {
+                    left: { width: 1, color: '#EFE3D6' },
+                    right: { width: 1, color: '#EFE3D6' },
+                    top: { width: 1, color: '#EFE3D6' },
+                    bottom: { width: 1, color: '#EFE3D6' },
+                },
+                padding: 12,
+            }}
+            cells={[
+                [
+                    { text: '课堂实验', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#2B1D14' } } },
+                    { text: '我用到的部分', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#2B1D14' } } },
+                    { text: '我的增量', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#E8622C' } } },
+                ],
+                [
+                    { text: 'demo_1 · Qwen 本地部署 + Streamlit 网页', textStyle: { bold: true, color: '#2B1D14' }, cellStyle: { background: { color: '#FBF1E6' } } },
+                    '本地模型跑通、网页界面、断网也能用',
+                    { text: '把本地模型当兜底：云端失败自动切过去，五层照样转完', textStyle: { color: '#2B1D14' }, cellStyle: { background: { color: '#FDEEE5' } } },
+                ],
+                [
+                    { text: 'demo_3 · 百炼 Agent 流式对话', textStyle: { bold: true, color: '#2B1D14' }, cellStyle: { background: { color: '#FBF1E6' } } },
+                    '云端模型调用、.env 管密钥、多轮上下文',
+                    { text: '云端换成 DeepSeek，同一套 OpenAI 兼容接口，流式照样逐字出', textStyle: { color: '#2B1D14' }, cellStyle: { background: { color: '#FDEEE5' } } },
+                ],
+                [
+                    { text: 'demo_4 · OpenAI 兼容接口调用', textStyle: { bold: true, color: '#2B1D14' }, cellStyle: { background: { color: '#FBF1E6' } } },
+                    '一份代码同时对接云端和本地',
+                    { text: '云端与本地只换 base_url，业务代码一行不改', textStyle: { color: '#2B1D14' }, cellStyle: { background: { color: '#FDEEE5' } } },
+                ],
+                [
+                    { text: 'demo_5 · Deep Agents（Skills + MCP + 记忆）', textStyle: { bold: true, color: '#2B1D14' }, cellStyle: { background: { color: '#FBF1E6' } } },
+                    'Skills 组织方式、长期记忆、工具调用循环',
+                    { text: '工具不是「查天气」式查询，是造盘 / 抽签 / 收尾这类决策原语', textStyle: { color: '#2B1D14' }, cellStyle: { background: { color: '#FDEEE5' } } },
+                ],
+            ]}
+        />
+    </Box>
+
+    <Box style={{ flexDirection: 'row', alignItems: 'center', height: 52, marginTop: 16, background: '#F4E3D3', borderRadius: 8, padding: '0 20px' }}>
+        <Text style={{ fontSize: 17, color: '#2B1D14' }}>课上给的是骨架：模型能跑、工具能调、Skills 能组织；我加的是<span style={{ fontWeight: 'bold', color: '#E8622C' }}>决策原语和权重模型</span>，让转盘真的会算。</Text>
+    </Box>
+
+    <Box style={{ position: 'absolute', left: 60, right: 60, bottom: 26, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>吃饱饱助手 · 校园吃饭决策智能体</Text>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>09 / 12</Text>
+    </Box>
+</Slide>

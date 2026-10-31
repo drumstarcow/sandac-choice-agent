@@ -1,0 +1,13 @@
+<Slide style={{ width: 1280, height: 720, background: '#FDF7EF', padding: 60, flexDirection: 'column', justifyContent: 'center', fontFamily: 'Microsoft YaHei' }}>
+    <Box style={{ flexDirection: 'column' }}>
+        <Text style={{ fontSize: 14, color: '#E8622C', letterSpacing: 3, fontWeight: 'bold' }}>11 · 一句话收尾</Text>
+        <Text style={{ fontSize: 54, fontWeight: 'bold', color: '#2B1D14', lineHeight: 1.32, marginTop: 26 }}>它不能让你不饿，<br />但它能让你<span style={{ color: '#E8622C' }}>不再纠结</span>。</Text>
+        <Box style={{ width: 64, height: 4, background: '#E8622C', marginTop: 30, borderRadius: 2 }} />
+        <Text style={{ fontSize: 18, color: '#3A2E24', lineHeight: 1.7, marginTop: 26 }}>接下来现场演示一轮：从「随便」开始，五层转完，拒绝一次看概率真的重排，<br />最后拿到一张能发朋友圈的卡。双击「启动吃饱饱.bat」，浏览器自动打开。</Text>
+        <Box style={{ height: 1, background: '#E2D3C2', marginTop: 34 }} />
+        <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 }}>
+            <Text style={{ fontSize: 15, color: '#8A7A6B' }}>孙涵韬　F24016436　路径 B · 校园服务智能体　2026.11.03</Text>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#E8622C' }}>谢谢　请提问</Text>
+        </Box>
+    </Box>
+</Slide>

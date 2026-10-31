@@ -37,3 +37,14 @@ outputs/shots/
 
 # ===== WorkBuddy 工作目录（不属于交付内容） =====
 .workbuddy/
+
+# ===== PPT 工具临时目录 =====
+.chk/
+.slidep/
+.cache/
+演示材料/PPT/*/.chk/
+演示材料/PPT/*/.slidep/
+演示材料/PPT/*/.cache/
+
+# ===== Office 锁文件 =====
+~$*

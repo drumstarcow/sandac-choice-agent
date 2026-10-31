@@ -614,7 +614,7 @@ h2 em{font-style:normal;color:var(--orange);}
   <div class="chain rv">
     <div class="step">
       <div class="n">L0</div><div class="nm">餐别</div>
-      <div class="ct">2 <span>个扇区</span></div>
+      <div class="ct">2 <span>正餐 / 甜品饮料</span></div>
     </div>
     <div class="arrow">→</div>
     <div class="step">
@@ -624,7 +624,7 @@ h2 em{font-style:normal;color:var(--orange);}
     <div class="arrow">→</div>
     <div class="step">
       <div class="n">L2</div><div class="nm">口味</div>
-      <div class="ct">2 <span>辣 / 不辣</span></div>
+      <div class="ct">2 <span>辣 / 不辣（甜品跳过）</span></div>
     </div>
     <div class="arrow">→</div>
     <div class="step">
@@ -805,7 +805,7 @@ h2 em{font-style:normal;color:var(--orange);}
   <rect x="132" y="374" width="1528" height="74" rx="12" fill="#FFFFFF" stroke="#EADDCB" stroke-width="1"/>
   <text x="0" y="418" font-size="18" fill="#8A7C6E" letter-spacing="2">能力层</text>
   <text x="162" y="407" font-size="26" font-weight="700" fill="#2B2118">tools.py · 10 个工具</text>
-  <text x="162" y="433" font-size="17" fill="#8A7C6E">build_wheel / search_dish / finalize / share_with_roommate …</text>
+  <text x="162" y="433" font-size="17" fill="#8A7C6E">build_wheel / search_dish / finalize_decision … 共 10 个</text>
   <text x="1632" y="418" font-size="17" fill="#B9AFA6" text-anchor="end">造盘 / 抽签 / 收尾</text>
   <line x1="896" y1="452" x2="896" y2="467" stroke="#C9B7A3" stroke-width="2.4" marker-end="url(#arw)"/>
   <rect x="132" y="466" width="1528" height="74" rx="12" fill="#FFFFFF" stroke="#EADDCB" stroke-width="1"/>
@@ -815,7 +815,7 @@ h2 em{font-style:normal;color:var(--orange);}
   <text x="1632" y="510" font-size="17" fill="#B9AFA6" text-anchor="end">断网也能跑</text>
     </svg>
   </div>
-  <div class="arch-note rv">危险操作（发给室友、写长期记忆）必须先确认；云端不可用时自动降级本地模型，界面会提示。</div>
+  <div class="arch-note rv">写文件、改长期记忆这类动作必须先确认；云端不可用时自动降级本地模型，界面会提示。</div>
   <div class="foot"><span>07 · 架构</span><span class="pg"><b>08</b> / 12</span></div>
 </section>
 
@@ -831,24 +831,24 @@ h2 em{font-style:normal;color:var(--orange);}
       <div>课堂实验</div><div>我用到的部分</div><div>我的增量</div>
     </div>
     <div class="tbl-row">
-      <div class="k"><span>demo_2</span>OpenAI 兼容 · Tool Calling</div>
-      <div class="v">模型调用、<b>tool_calls</b> 结构化解析、多轮对话</div>
-      <div class="v">工具不是「查天气」式查询，而是<b>造转盘 / 抽签 / 收尾</b>这类决策原语</div>
+      <div class="k"><span>demo_1</span>Qwen 本地部署 + Streamlit 网页</div>
+      <div class="v">本地模型跑通、网页界面、<b>断网也能用</b></div>
+      <div class="v">把本地模型当<b>兜底</b>：云端失败自动切过去，五层照样转完</div>
     </div>
     <div class="tbl-row">
-      <div class="k"><span>demo_3 / 4</span>云端模型 · 密钥管理</div>
-      <div class="v">DeepSeek 云端调用、<b>.env</b> + <b>.env.example</b>、密钥不进仓库</div>
-      <div class="v">云端失败或没 key 时<b>自动回退本地 Ollama</b>，断网也能完整演示</div>
+      <div class="k"><span>demo_3</span>百炼 Agent 流式对话</div>
+      <div class="v">云端模型调用、<b>.env</b> 管密钥、多轮上下文</div>
+      <div class="v">云端换成 <b>DeepSeek</b>，同一套 OpenAI 兼容接口，流式照样逐字出</div>
     </div>
     <div class="tbl-row">
-      <div class="k"><span>demo_5</span>Agent · Skills</div>
-      <div class="v">Skills 组织结构、Agent 主循环思路</div>
-      <div class="v"><b>状态机 + 模型分工</b>：模型负责听懂，状态机保证五层不会走错</div>
+      <div class="k"><span>demo_4</span>OpenAI 兼容接口调用</div>
+      <div class="v">一份代码同时对接云端和本地</div>
+      <div class="v">云端与本地只换 <b>base_url</b>，业务代码一行不改</div>
     </div>
     <div class="tbl-row">
-      <div class="k"><span>自己加的</span>决策转盘</div>
-      <div class="v">—</div>
-      <div class="v">WheelEngine 权重模型、五层决策链、一菜一格去重、四条并排去重、桌面窗口三级降级</div>
+      <div class="k"><span>demo_5</span>Deep Agents · Skills + MCP + 记忆</div>
+      <div class="v">Skills 组织方式、长期记忆、工具调用循环</div>
+      <div class="v">工具不是「查天气」式查询，是<b>造盘 / 抽签 / 收尾</b>这类决策原语</div>
     </div>
   </div>
   <div class="foot"><span>08 · 与课堂的关系</span><span class="pg"><b>09</b> / 12</span></div>

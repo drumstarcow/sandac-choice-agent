@@ -1,0 +1,115 @@
+<Slide style={{ width: 1280, height: 720, background: '#FDF7EF', padding: 60, flexDirection: 'column', fontFamily: 'Microsoft YaHei' }}>
+    <Box style={{ flexDirection: 'column' }}>
+        <Text style={{ fontSize: 14, color: '#E8622C', letterSpacing: 3, fontWeight: 'bold' }}>01 · 问题现场</Text>
+        <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#2B1D14', marginTop: 10 }}>八轮对话，零个决定</Text>
+        <Box style={{ height: 1, background: '#E2D3C2', marginTop: 16 }} />
+    </Box>
+
+    <Box style={{ flexDirection: 'row', gap: 40, marginTop: 28 }}>
+        <Box style={{ width: 648, height: 476, background: '#FFFFFF', border: '1px solid #E2D3C2', borderRadius: 10, padding: 22, flexDirection: 'column' }}>
+            <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#2B1D14' }}>3 号楼 · 室友群 (2)</Text>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>5G　82%</Text>
+            </Box>
+            <Box style={{ height: 1, background: '#E2D3C2', marginTop: 12 }} />
+            <Text style={{ fontSize: 14, color: '#8A7A6B', textAlign: 'center', marginTop: 10 }}>今天 12:04</Text>
+
+            <Box style={{ flexDirection: 'column', gap: 7, marginTop: 10 }}>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Box style={{ width: 22, height: 22, borderRadius: 11, background: '#E2D3C2', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#3A2E24' }}>A</Text>
+                    </Box>
+                    <Box style={{ background: '#F4E3D3', borderRadius: 8, padding: '7px 14px' }}>
+                        <Text style={{ fontSize: 17, color: '#3A2E24', lineHeight: 1.35 }}>今天咱们中午吃啥？</Text>
+                    </Box>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                    <Box style={{ background: '#E8622C', borderRadius: 8, padding: '7px 14px' }}>
+                        <Text style={{ fontSize: 17, color: '#FFFFFF', lineHeight: 1.35 }}>不知道，随便都可以。</Text>
+                    </Box>
+                    <Box style={{ width: 22, height: 22, borderRadius: 11, background: '#E8622C', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FFFFFF' }}>B</Text>
+                    </Box>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Box style={{ width: 22, height: 22, borderRadius: 11, background: '#E2D3C2', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#3A2E24' }}>A</Text>
+                    </Box>
+                    <Box style={{ background: '#F4E3D3', borderRadius: 8, padding: '7px 14px' }}>
+                        <Text style={{ fontSize: 17, color: '#3A2E24', lineHeight: 1.35 }}>那吃火锅？</Text>
+                    </Box>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                    <Box style={{ background: '#E8622C', borderRadius: 8, padding: '7px 14px' }}>
+                        <Text style={{ fontSize: 17, color: '#FFFFFF', lineHeight: 1.35 }}>太热了，不是很想去吃。</Text>
+                    </Box>
+                    <Box style={{ width: 22, height: 22, borderRadius: 11, background: '#E8622C', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FFFFFF' }}>B</Text>
+                    </Box>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Box style={{ width: 22, height: 22, borderRadius: 11, background: '#E2D3C2', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#3A2E24' }}>A</Text>
+                    </Box>
+                    <Box style={{ background: '#F4E3D3', borderRadius: 8, padding: '7px 14px' }}>
+                        <Text style={{ fontSize: 17, color: '#3A2E24', lineHeight: 1.35 }}>那烤肉？</Text>
+                    </Box>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                    <Box style={{ background: '#E8622C', borderRadius: 8, padding: '7px 14px' }}>
+                        <Text style={{ fontSize: 17, color: '#FFFFFF', lineHeight: 1.35 }}>烤肉太麻烦了，还要自己烤。</Text>
+                    </Box>
+                    <Box style={{ width: 22, height: 22, borderRadius: 11, background: '#E8622C', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FFFFFF' }}>B</Text>
+                    </Box>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Box style={{ width: 22, height: 22, borderRadius: 11, background: '#E2D3C2', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#3A2E24' }}>A</Text>
+                    </Box>
+                    <Box style={{ background: '#F4E3D3', borderRadius: 8, padding: '7px 14px' }}>
+                        <Text style={{ fontSize: 17, color: '#3A2E24', lineHeight: 1.35 }}>那到底吃什么？</Text>
+                    </Box>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                    <Box style={{ background: '#E8622C', borderRadius: 8, padding: '7px 14px' }}>
+                        <Text style={{ fontSize: 17, color: '#FFFFFF', lineHeight: 1.35 }}>随便啊，都可以。</Text>
+                    </Box>
+                    <Box style={{ width: 22, height: 22, borderRadius: 11, background: '#E8622C', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FFFFFF' }}>B</Text>
+                    </Box>
+                </Box>
+            </Box>
+        </Box>
+
+        <Box style={{ flex: 1, flexDirection: 'column' }}>
+            <Box style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 36 }}>
+                <Box style={{ flexDirection: 'column' }}>
+                    <Text style={{ fontSize: 96, fontWeight: 'bold', color: '#E8622C', lineHeight: 1 }}>8</Text>
+                    <Text style={{ fontSize: 18, color: '#3A2E24', marginTop: 8 }}>轮对话</Text>
+                </Box>
+                <Box style={{ width: 1, height: 76, background: '#E2D3C2', marginBottom: 32 }} />
+                <Box style={{ flexDirection: 'column' }}>
+                    <Text style={{ fontSize: 96, fontWeight: 'bold', color: '#2B1D14', lineHeight: 1 }}>0</Text>
+                    <Text style={{ fontSize: 18, color: '#3A2E24', marginTop: 8 }}>个决定</Text>
+                </Box>
+            </Box>
+
+            <Text style={{ fontSize: 18, color: '#3A2E24', lineHeight: 1.65, marginTop: 36 }}>
+                两个人都不挑，却在这儿卡了整整八轮。<br />
+                不是没得吃 —— 学校周边 <span style={{ fontWeight: 'bold', color: '#E8622C' }}>111 家店</span>、食堂 <span style={{ fontWeight: 'bold', color: '#E8622C' }}>63 道菜</span>，加起来 174 个选项。
+            </Text>
+
+            <Box style={{ background: '#F4E3D3', borderRadius: 8, padding: 18, marginTop: 28 }}>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#2B1D14', lineHeight: 1.5 }}>缺的不是选项，<br />是一个把「选」这个动作做完的东西。</Text>
+            </Box>
+
+            <Text style={{ fontSize: 14, color: '#8A7A6B', lineHeight: 1.5, marginTop: 'auto' }}>最后往往是随便进一家，然后两个人都吃得不太高兴。</Text>
+        </Box>
+    </Box>
+
+    <Box style={{ position: 'absolute', left: 60, right: 60, bottom: 26, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>吃饱饱助手 · 校园吃饭决策智能体</Text>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>02 / 12</Text>
+    </Box>
+</Slide>

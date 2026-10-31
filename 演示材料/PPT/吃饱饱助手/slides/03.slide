@@ -1,0 +1,64 @@
+<Slide style={{ width: 1280, height: 720, background: '#FDF7EF', padding: 60, flexDirection: 'column', fontFamily: 'Microsoft YaHei' }}>
+    <Box style={{ flexDirection: 'column' }}>
+        <Text style={{ fontSize: 14, color: '#E8622C', letterSpacing: 3, fontWeight: 'bold' }}>02 · 为什么现有工具救不了这一顿饭</Text>
+        <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#2B1D14', marginTop: 10 }}>它们都在给选项，而我要的是一个答案</Text>
+        <Box style={{ height: 1, background: '#E2D3C2', marginTop: 16 }} />
+    </Box>
+
+    <Box style={{ height: 400, marginTop: 26, background: '#FFFFFF', border: '1px solid #E2D3C2', borderRadius: 10, padding: 8 }}>
+        <Table
+            style={{ width: '100%', height: '100%' }}
+            defaultTextStyle={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.4 }}
+            defaultCellStyle={{
+                border: {
+                    left: { width: 1, color: '#EFE3D6' },
+                    right: { width: 1, color: '#EFE3D6' },
+                    top: { width: 1, color: '#EFE3D6' },
+                    bottom: { width: 1, color: '#EFE3D6' },
+                },
+                padding: 12,
+            }}
+            cells={[
+                [
+                    { text: '现在用的工具', textStyle: { bold: true, color: '#8A7A6B', fontSize: 15 }, cellStyle: { background: { color: '#FBF1E6' } } },
+                    { text: '豆包 / 通用对话 AI', textStyle: { bold: true, color: '#2B1D14', fontSize: 17 }, cellStyle: { background: { color: '#F4E3D3' } } },
+                    { text: '外卖 App', textStyle: { bold: true, color: '#2B1D14', fontSize: 17 }, cellStyle: { background: { color: '#F4E3D3' } } },
+                    { text: '吃饱饱助手', textStyle: { bold: true, color: '#FFFFFF', fontSize: 17 }, cellStyle: { background: { color: '#E8622C' } } },
+                ],
+                [
+                    { text: '它给你什么', textStyle: { bold: true, color: '#2B1D14' }, cellStyle: { background: { color: '#FBF1E6' } } },
+                    '更长的清单：火锅、烤肉、日料、川菜…',
+                    '半径内那几家，按销量和投放排序',
+                    { text: '一个决定，加一个「换一个」按钮', textStyle: { bold: true, color: '#2B1D14' }, cellStyle: { background: { color: '#FDEEE5' } } },
+                ],
+                [
+                    { text: '你的下一步', textStyle: { bold: true, color: '#2B1D14' }, cellStyle: { background: { color: '#FBF1E6' } } },
+                    '还得自己挑 —— 本来就没想法',
+                    '点开看看，还是那几家',
+                    { text: '转完就走，不用再纠结', textStyle: { bold: true, color: '#2B1D14' }, cellStyle: { background: { color: '#FDEEE5' } } },
+                ],
+                [
+                    { text: '吃到第三次', textStyle: { bold: true, color: '#2B1D14' }, cellStyle: { background: { color: '#FBF1E6' } } },
+                    '每次都要从头问一遍',
+                    '腻了 —— 越准越只推同一批',
+                    { text: '174 个候选全在盘上，每次都不一样', textStyle: { bold: true, color: '#2B1D14' }, cellStyle: { background: { color: '#FDEEE5' } } },
+                ],
+                [
+                    { text: '能不能拒绝', textStyle: { bold: true, color: '#2B1D14' }, cellStyle: { background: { color: '#FBF1E6' } } },
+                    '换个说法，再推一遍',
+                    '只能划走，下次还推',
+                    { text: '权重清零，剩下的概率真的重排', textStyle: { bold: true, color: '#2B1D14' }, cellStyle: { background: { color: '#FDEEE5' } } },
+                ],
+            ]}
+        />
+    </Box>
+
+    <Box style={{ flexDirection: 'row', alignItems: 'center', height: 56, marginTop: 16, background: '#2B1D14', borderRadius: 8, padding: '0 22px' }}>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' }}>别人给你更多选项，我们帮你<span style={{ color: '#F6A97F' }}>减少选项</span>。</Text>
+    </Box>
+
+    <Box style={{ position: 'absolute', left: 60, right: 60, bottom: 26, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>吃饱饱助手 · 校园吃饭决策智能体</Text>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>03 / 12</Text>
+    </Box>
+</Slide>

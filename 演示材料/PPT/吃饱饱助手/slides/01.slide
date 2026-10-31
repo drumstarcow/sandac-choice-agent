@@ -1,0 +1,25 @@
+<Slide style={{ width: 1280, height: 720, background: '#FDF7EF', padding: 60, flexDirection: 'row', fontFamily: 'Microsoft YaHei' }}>
+    <Box style={{ width: 600, flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Box style={{ flexDirection: 'column' }}>
+            <Text style={{ fontSize: 14, color: '#E8622C', letterSpacing: 3, fontWeight: 'bold' }}>开源 AI 技术实践 · 期末考查 · 路径 B</Text>
+            <Text style={{ fontSize: 84, fontWeight: 'bold', color: '#2B1D14', lineHeight: 1.15, marginTop: 36 }}>今天中午，<br />吃什么？</Text>
+            <Box style={{ width: 64, height: 4, background: '#E8622C', marginTop: 30, borderRadius: 2 }} />
+            <Text style={{ fontSize: 26, fontWeight: 'bold', color: '#2B1D14', lineHeight: 1.45, marginTop: 30 }}>吃饱饱助手 —— 一个替你做决定的<br />校园吃饭智能体</Text>
+            <Text style={{ fontSize: 18, color: '#8A7A6B', lineHeight: 1.6, marginTop: 18 }}>它不是又一个推荐餐厅的 AI，<br />它是那个敢替你说「就它了」的家伙。</Text>
+        </Box>
+        <Box style={{ flexDirection: 'column', gap: 14 }}>
+            <Box style={{ height: 1, background: '#E2D3C2' }} />
+            <Box style={{ flexDirection: 'row', gap: 44 }}>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>姓名　<span style={{ color: '#3A2E24', fontWeight: 'bold' }}>孙涵韬</span></Text>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>学号　<span style={{ color: '#3A2E24', fontWeight: 'bold' }}>F24016436</span></Text>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>汇报　<span style={{ color: '#3A2E24', fontWeight: 'bold' }}>2026.11.03</span></Text>
+            </Box>
+        </Box>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', gap: 14 }}>
+        <Box style={{ width: 520, height: 325, background: '#FFFFFF', border: '1px solid #E2D3C2', borderRadius: 10, padding: 8 }}>
+            <Image src="assets/wheel.png" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
+        </Box>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>第 0 层 · 餐别　两个扇区各 50%</Text>
+    </Box>
+</Slide>

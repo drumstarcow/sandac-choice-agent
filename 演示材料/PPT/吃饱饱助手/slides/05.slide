@@ -1,0 +1,34 @@
+<Slide style={{ width: 1280, height: 720, background: '#FDF7EF', padding: 60, flexDirection: 'column', fontFamily: 'Microsoft YaHei' }}>
+    <Box style={{ flexDirection: 'column' }}>
+        <Text style={{ fontSize: 14, color: '#E8622C', letterSpacing: 3, fontWeight: 'bold' }}>04 · 它长什么样</Text>
+        <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#2B1D14', marginTop: 10 }}>转一下，就是一下</Text>
+        <Box style={{ height: 1, background: '#E2D3C2', marginTop: 16 }} />
+    </Box>
+
+    <Box style={{ flexDirection: 'row', gap: 36, marginTop: 24 }}>
+        <Box style={{ width: 540, flexDirection: 'column', gap: 12 }}>
+            <Box style={{ height: 330, background: '#FFFFFF', border: '1px solid #E2D3C2', borderRadius: 10, padding: 6 }}>
+                <Image src="assets/wheel.png" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
+            </Box>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#2B1D14' }}>第 0 层 · 餐别</Text>
+            <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.55 }}>两个扇区各 50%，百分比是后端算出来的真实权重。三个按钮全在盘外：就要这个 / 换一个 / 都行你替我定。</Text>
+        </Box>
+
+        <Box style={{ width: 540, flexDirection: 'column', gap: 12 }}>
+            <Box style={{ height: 330, background: '#FFFFFF', border: '1px solid #E2D3C2', borderRadius: 10, padding: 6 }}>
+                <Image src="assets/dish_grid.png" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
+            </Box>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#2B1D14' }}>第 4 层 · 菜品</Text>
+            <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.55 }}>格子跳动 28～44 次后减速停下，停下的那格放大成名片。两家都卖的麻辣烫合成一格，标「2 家都有 · ¥14 起」。</Text>
+        </Box>
+    </Box>
+
+    <Box style={{ flexDirection: 'row', alignItems: 'center', height: 56, marginTop: 20, background: '#F4E3D3', borderRadius: 8, padding: '0 22px' }}>
+        <Text style={{ fontSize: 18, color: '#2B1D14' }}>盘上只放<span style={{ fontWeight: 'bold', color: '#E8622C' }}>能被抽中的真选项</span>，「随便」站盘外；同一道菜只占<span style={{ fontWeight: 'bold', color: '#E8622C' }}>一格</span>。</Text>
+    </Box>
+
+    <Box style={{ position: 'absolute', left: 60, right: 60, bottom: 26, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>吃饱饱助手 · 校园吃饭决策智能体</Text>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>05 / 12</Text>
+    </Box>
+</Slide>

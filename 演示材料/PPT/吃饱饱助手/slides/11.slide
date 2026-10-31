@@ -1,0 +1,69 @@
+<Slide style={{ width: 1280, height: 720, background: '#FDF7EF', padding: 60, flexDirection: 'column', fontFamily: 'Microsoft YaHei' }}>
+    <Box style={{ flexDirection: 'column' }}>
+        <Text style={{ fontSize: 14, color: '#E8622C', letterSpacing: 3, fontWeight: 'bold' }}>10 · 现在做不到的，和接下来要做的</Text>
+        <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#2B1D14', marginTop: 10 }}>它还是个半成品，但我知道下一步往哪走</Text>
+        <Box style={{ height: 1, background: '#E2D3C2', marginTop: 16 }} />
+    </Box>
+
+    <Box style={{ flexDirection: 'column', marginTop: 24 }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 20, height: 126, borderBottom: '1px solid #E2D3C2' }}>
+            <Box style={{ width: 150, flexDirection: 'column', gap: 6 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C' }}>01</Text>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#2B1D14' }}>实时定位</Text>
+            </Box>
+            <Box style={{ width: 240, flexDirection: 'column', gap: 6 }}>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>现在</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.45 }}>圆心固定在金海校区<br />1 公里范围写死</Text>
+            </Box>
+            <Text style={{ fontSize: 20, color: '#C9BCA8' }}>→</Text>
+            <Box style={{ flex: 1, flexDirection: 'column', gap: 6 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C' }}>下一步</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.55 }}>接浏览器定位，用户自己选 500 米 / 1 公里 / 2 公里，商圈跟着人走。</Text>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>代码里 candidates(radius=…) 已经留好了，接上定位就能用</Text>
+            </Box>
+        </Box>
+
+        <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 20, height: 126, borderBottom: '1px solid #E2D3C2' }}>
+            <Box style={{ width: 150, flexDirection: 'column', gap: 6 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C' }}>02</Text>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#2B1D14' }}>真实菜品图</Text>
+            </Box>
+            <Box style={{ width: 240, flexDirection: 'column', gap: 6 }}>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>现在</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.45 }}>本地生成的 SVG 占位图<br />断网可用，但不勾食欲</Text>
+            </Box>
+            <Text style={{ fontSize: 20, color: '#C9BCA8' }}>→</Text>
+            <Box style={{ flex: 1, flexDirection: 'column', gap: 6 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C' }}>下一步</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.55 }}>换成实拍图，让「看饿了」这件事真的发生。</Text>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>换图只需替换 data/ 里的 img 字段，不用改代码</Text>
+            </Box>
+        </Box>
+
+        <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 20, height: 126, borderBottom: '1px solid #E2D3C2' }}>
+            <Box style={{ width: 150, flexDirection: 'column', gap: 6 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C' }}>03</Text>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#2B1D14' }}>真实评价</Text>
+            </Box>
+            <Box style={{ width: 240, flexDirection: 'column', gap: 6 }}>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>现在</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.45 }}>公开评分 4.0–4.8<br />只代表「平均口碑」</Text>
+            </Box>
+            <Text style={{ fontSize: 20, color: '#C9BCA8' }}>→</Text>
+            <Box style={{ flex: 1, flexDirection: 'column', gap: 6 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C' }}>下一步</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.55 }}>吃完可以匿名留一句真实评价，别人再看到这道菜，能按「最近」或「浏览量最高」排序参考。</Text>
+                <Text style={{ fontSize: 14, color: '#8A7A6B' }}>从「数据推荐」变成「人推荐人」，这才是校园场景该有的样子</Text>
+            </Box>
+        </Box>
+    </Box>
+
+    <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50, marginTop: 18, background: '#F4E3D3', borderRadius: 8, padding: '0 20px' }}>
+        <Text style={{ fontSize: 17, color: '#2B1D14' }}>三件事的代码位置都留好了 —— 缺的是数据和权限，<span style={{ fontWeight: 'bold', color: '#E8622C' }}>不是设计</span>。</Text>
+    </Box>
+
+    <Box style={{ position: 'absolute', left: 60, right: 60, bottom: 26, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>吃饱饱助手 · 校园吃饭决策智能体</Text>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>11 / 12</Text>
+    </Box>
+</Slide>

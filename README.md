@@ -90,10 +90,10 @@
 |---|---|
 | 路径 B：把已有功能用自然语言接起来 | 普通功能 = 查询 / 筛选 / 排序 / 生成清单；用自然语言驱动转盘与推荐 |
 | 必须有 **Tool Calling**（不能只做关键词 if-else） | 云 / 本地模型的 OpenAI 兼容 `tool_calls`，**结构化读取**（`resp.choices[0].message.tool_calls`），界面「工具调用 N 次」卡片可见 |
-| ≥3 个工具 | **10 个**：`build_wheel` / `search_dish` / `recommend_nearby_food` / `finalize_decision` / `finalize_recommend` / `share_with_roommate` / `get_profile` / `set_profile` / `save_preference` / `get_recent_profile`；随机化由独立 `WheelEngine`（抽中衰减 0.6 / 拒绝清零 / 归一化）真实计算 |
+| ≥3 个工具 | **10 个**：`build_wheel` / `search_dish` / `recommend_nearby_food` / `finalize_decision` / `finalize_recommend` / `share_with_roommate`（模拟外发·不真发） / `get_profile` / `set_profile` / `save_preference` / `get_recent_profile`；随机化由独立 `WheelEngine`（抽中衰减 0.6 / 拒绝清零 / 归一化）真实计算 |
 | ≥1 个 Skill | `skills/decision_skill/` |
 | 界面 | **桌面窗口**（`app.py`：pywebview → Edge `--app` 无边框窗口 → 浏览器，三级降级），前端 `ui/` |
-| 危险操作有确认 | 发给室友 / 写长期记忆 → 前端必须确认才执行 |
+| 危险操作有确认 | 写文件、改长期记忆这类动作 → 前端必须确认才执行 |
 | README + HTML 幻灯片 | 本文件 + **`slides.html`**（单文件、图片内嵌，双击即开，12 页） |
 | 提交到自己的 Git 仓库 | GitCode: bravecow/sandac-choice-agent |
 

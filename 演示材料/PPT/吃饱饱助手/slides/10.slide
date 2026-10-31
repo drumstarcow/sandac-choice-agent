@@ -1,0 +1,47 @@
+<Slide style={{ width: 1280, height: 720, background: '#FDF7EF', padding: 60, flexDirection: 'column', fontFamily: 'Microsoft YaHei' }}>
+    <Box style={{ flexDirection: 'column' }}>
+        <Text style={{ fontSize: 14, color: '#E8622C', letterSpacing: 3, fontWeight: 'bold' }}>09 · 数据来源与边界</Text>
+        <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#2B1D14', marginTop: 10 }}>数据是真的，边界也是说清楚的</Text>
+        <Box style={{ height: 1, background: '#E2D3C2', marginTop: 16 }} />
+    </Box>
+
+    <Box style={{ flexDirection: 'row', gap: 20, marginTop: 26 }}>
+        <Box style={{ width: 440, height: 344, background: '#FFFFFF', border: '1px solid #E2D3C2', borderRadius: 10, padding: 24, flexDirection: 'column', justifyContent: 'space-between' }}>
+            <Box style={{ flexDirection: 'column', gap: 10 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C', letterSpacing: 1 }}>01</Text>
+                <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#2B1D14' }}>数据从哪来</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.65, marginTop: 6 }}>食堂 <span style={{ fontWeight: 'bold' }}>63 道菜</span>按窗口价目整理；周边 <span style={{ fontWeight: 'bold' }}>111 家商户</span>按公开信息采集：店名、品类、人均、坐标。</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.65 }}>距离不是编的 —— 用校区经纬度和店铺坐标做 haversine 真实计算。</Text>
+            </Box>
+            <Text style={{ fontSize: 14, color: '#8A7A6B' }}>采集时间 2026-10-31 · 已标注来源与采集日期</Text>
+        </Box>
+
+        <Box style={{ width: 380, height: 344, background: '#F4E3D3', borderRadius: 10, padding: 24, flexDirection: 'column', justifyContent: 'space-between' }}>
+            <Box style={{ flexDirection: 'column', gap: 10 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#E8622C', letterSpacing: 1 }}>02</Text>
+                <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#2B1D14' }}>隐私怎么处理</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.65, marginTop: 6 }}>不采集实时定位，只用固定的校区坐标当圆心。</Text>
+                <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.65 }}>口味偏好和历史记录只写本地 data/profile.json，不进仓库、不上传任何服务器。</Text>
+            </Box>
+            <Text style={{ fontSize: 14, color: '#8A7A6B' }}>.env 与画像文件都在 .gitignore 内</Text>
+        </Box>
+
+        <Box style={{ width: 300, height: 344, background: '#2B1D14', borderRadius: 10, padding: 24, flexDirection: 'column', justifyContent: 'space-between' }}>
+            <Box style={{ flexDirection: 'column', gap: 10 }}>
+                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#F6A97F', letterSpacing: 1 }}>03</Text>
+                <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#FFFFFF' }}>不做什么</Text>
+                <Text style={{ fontSize: 16, color: '#EFE3D6', lineHeight: 1.65, marginTop: 6 }}>不代写作业、不做营销推广、不诱导消费、不采集任何与「吃」无关的个人信息。</Text>
+            </Box>
+            <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#F6A97F', lineHeight: 1.5 }}>它只回答一个问题：这顿吃啥。超出范围会如实说「这个我不管」。</Text>
+        </Box>
+    </Box>
+
+    <Box style={{ flexDirection: 'row', alignItems: 'center', height: 52, marginTop: 20, background: '#FBF1E6', borderRadius: 8, padding: '0 20px' }}>
+        <Text style={{ fontSize: 18, color: '#2B1D14' }}>每条数据都能追到来源，每项边界都写在明处 —— <span style={{ fontWeight: 'bold', color: '#E8622C' }}>不做「看起来什么都能干」的 AI</span>。</Text>
+    </Box>
+
+    <Box style={{ position: 'absolute', left: 60, right: 60, bottom: 26, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>吃饱饱助手 · 校园吃饭决策智能体</Text>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>10 / 12</Text>
+    </Box>
+</Slide>

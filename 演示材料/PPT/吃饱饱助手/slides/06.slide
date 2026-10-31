@@ -1,0 +1,70 @@
+<Slide style={{ width: 1280, height: 720, background: '#FDF7EF', padding: 60, flexDirection: 'column', fontFamily: 'Microsoft YaHei' }}>
+    <Box style={{ flexDirection: 'column' }}>
+        <Text style={{ fontSize: 14, color: '#E8622C', letterSpacing: 3, fontWeight: 'bold' }}>05 · 关键代码（我自己写的）</Text>
+        <Text style={{ fontSize: 36, fontWeight: 'bold', color: '#2B1D14', marginTop: 10 }}>概率不是动画，是算出来的</Text>
+        <Box style={{ height: 1, background: '#E2D3C2', marginTop: 16 }} />
+    </Box>
+
+    <Box style={{ flex: 1, flexDirection: 'row', gap: 40, alignItems: 'center' }}>
+        <Box style={{ width: 660 }}>
+            <CodeBlock
+                code={`class WheelEngine:
+    """真实权重模型：抽中衰减 / 拒绝清零 / 归一化"""
+    DECAY = 0.6      # 抽中后衰减，避免连着抽同一个
+
+    def probabilities(self, layer, options):
+        w = self._ensure(layer, options)
+        total = sum(w.values())
+        return {o: round(w[o] / total, 4) for o in options}
+
+    def reject(self, layer, item):
+        # 拒绝：本次会话内权重清零，永不复活
+        self.weights[layer][item] = 0.0
+
+    def decay(self, layer, item):
+        self.weights[layer][item] *= self.DECAY`}
+                language='python'
+                width={660}
+                fontSize={15}
+                theme='github-dark'
+            />
+        </Box>
+
+        <Box style={{ flex: 1, flexDirection: 'column', gap: 26 }}>
+            <Box style={{ flexDirection: 'row', gap: 14 }}>
+                <Box style={{ width: 28, height: 28, borderRadius: 6, background: '#E8622C', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFFFFF' }}>01</Text>
+                </Box>
+                <Box style={{ flex: 1, flexDirection: 'column', gap: 6 }}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#2B1D14' }}>权重存在后端，不在前端</Text>
+                    <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.55 }}>前端只负责画。扇区上那个百分比，是后端算出来的数直接显示 —— 所以拒绝之后它会变。</Text>
+                </Box>
+            </Box>
+
+            <Box style={{ flexDirection: 'row', gap: 14 }}>
+                <Box style={{ width: 28, height: 28, borderRadius: 6, background: '#E8622C', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFFFFF' }}>02</Text>
+                </Box>
+                <Box style={{ flex: 1, flexDirection: 'column', gap: 6 }}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#2B1D14' }}>读的是结构化 tool_calls</Text>
+                    <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.55 }}>不是解析「🔧」这种字符串。日志里的 tool_calls=1，是从 message.tool_calls 里数出来的。</Text>
+                </Box>
+            </Box>
+
+            <Box style={{ flexDirection: 'row', gap: 14 }}>
+                <Box style={{ width: 28, height: 28, borderRadius: 6, background: '#E8622C', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FFFFFF' }}>03</Text>
+                </Box>
+                <Box style={{ flex: 1, flexDirection: 'column', gap: 6 }}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#2B1D14' }}>关键词只在模型挂了才兜底</Text>
+                    <Text style={{ fontSize: 16, color: '#3A2E24', lineHeight: 1.55 }}>异常或返回空时才走关键词分支，并打上「兜底模式」标签 —— 正常演示里这个标签不该出现。</Text>
+                </Box>
+            </Box>
+        </Box>
+    </Box>
+
+    <Box style={{ position: 'absolute', left: 60, right: 60, bottom: 26, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>吃饱饱助手 · 校园吃饭决策智能体</Text>
+        <Text style={{ fontSize: 14, color: '#8A7A6B' }}>06 / 12</Text>
+    </Box>
+</Slide>
