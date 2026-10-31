@@ -66,9 +66,9 @@
       <div class="node"><b>确定前</b>美食名片<br/>勾起食欲</div>
     </div>
     <div class="row">
-      <span class="pill">转到不想要？点「拒绝」剔除，重排转盘</span>
-      <span class="pill">剩余选项概率自动均分</span>
-      <span class="pill">「随便」= 不过滤，全量菜品</span>
+      <span class="pill">转到不想要？点「拒绝」→ 该选项权重清零，其余按权重重排</span>
+      <span class="pill">扇区实时显示概率%，拒绝后重排肉眼可见</span>
+      <span class="pill">「随便」= 不过滤，全量菜品；转盘正中「转一下」真实可点</span>
     </div>
   </section>
 
@@ -79,7 +79,19 @@
       <div class="card" style="max-width:400px">🎡 <b>真实旋转大转盘</b><br/>Canvas 动画旋转，转到即结果；接受/拒绝按钮闭环。</div>
       <div class="card" style="max-width:400px">📇 <b>美食名片</b><br/>确定前弹出特写+介绍，勾起食欲；不喜欢可「换一个」。</div>
     </div>
-    <div class="sub">区别于“关键词 if-else”：转盘选项来自真实数据文件，剔除后概率均分重排——是真实决策辅助。</div>
+    <div class="sub">区别于“关键词 if-else”：随机化由独立<b>权重概率引擎</b>计算（抽中衰减 w*=0.6、拒绝清零 w=0、归一化），扇区显示概率%；转盘正中「转一下」是真实可点按钮——是真实决策辅助。</div>
+  </section>
+
+  <!-- 4.2 防假AI：权重概率 + 三句话 -->
+  <section class="slide">
+    <h2>🛡️ 为什么不是“关键词 if-else”</h2>
+    <div class="card">🎲 <b>真实权重概率引擎</b>：抽中后衰减（w*=0.6，避免连抽同一个）、被拒清零（w=0，永不复活）、归一化（p_i=w_i/Σw）。扇区上<b>实时显示概率%</b>，拒绝后重排肉眼可见。</div>
+    <div class="sub" style="margin:14px 0">演示里最值钱的三句话，能让评审 30 秒判断“这是真智能体”：</div>
+    <div class="row">
+      <div class="card" style="max-width:520px">① “<b>这个你已经拒过了，我不会再推给你。</b>”<br/><small style="color:#aab">证明权重真的在变</small></div>
+      <div class="card" style="max-width:520px">② “<b>今天好累啊……那来点热的？</b>”<br/><small style="color:#aab">证明不是只会转盘</small></div>
+      <div class="card" style="max-width:520px">③ “<b>要记住你不吃辣，对吗？</b>”<br/><small style="color:#aab">证明写操作有二次确认</small></div>
+    </div>
   </section>
 
   <!-- 4.5 记忆 + 定位 + 性价比 -->
@@ -120,23 +132,26 @@
 
   <!-- 6 工具调用 -->
   <section class="slide">
-    <h2>🔧 工具调用（已验证真实调用 · 共 7 个）</h2>
+    <h2>🔧 工具调用（已验证真实调用 · 共 8 个）</h2>
     <div class="row">
       <span class="tool">build_wheel</span>
       <span class="tool">recommend_nearby_food</span>
       <span class="tool">finalize_decision</span>
       <span class="tool">finalize_recommend</span>
       <span class="tool">get/set_profile</span>
+      <span class="tool">save_preference(需确认)</span>
       <span class="tool">get_recent_profile</span>
-      <span class="tool">share_with_roommate</span>
+      <span class="tool">share_with_roommate(需确认)</span>
     </div>
     <pre># 模型真实发起的工具调用（0.5B 本地模型实测通过）
 🔧 recommend_nearby_food({'campus':'金海校区','budget':'20','taste':'不辣'})
 ↳ 以校区为圆心，haversine 算距，按 距离+性价比+评分 排序：
   🏆 蜜雪冰城 0.05km ￥8 ⭐4.6 综合分0.983
-  正新鸡排 0.04km ￥10 ⭐4.2 综合分0.73
-🔧 set_profile({'field':'campus','value':'金海校区'})  → 记住定位
-🔧 get_recent_profile()  → 最近10次聚合出的“近期画像”</pre>
+🔧 save_preference({'key':'dislikes','value':'辣'})  → 先回显确认“要记住你不吃辣，对吗？”
+🔧 get_recent_profile()  → 最近10次聚合出的“近期画像”
+
+# 转盘随机化由独立权重概率引擎真实计算（非提示词 if-else）：
+#   抽中衰减 w*=0.6，被拒清零 w=0，归一化 p_i=w_i/Σw，扇区显示该 %</pre>
     <div class="sub">满足考查硬性要求：<span class="ok">必须有 Tool Calling，不能只做关键词 if-else</span>；工具数远超“≥3 个 / 1 个 MCP(≥2 工具)”门槛。</div>
   </section>
 
@@ -153,7 +168,7 @@
     <h2>📋 与考查要求对应</h2>
     <div class="card">
       ✅ 路径 B（自然语言驱动已有功能）　✅ 真实 Tool Calling<br/>
-      ✅ 7 个工具（≥3 门槛）　✅ ≥1 个 Skill（skills/decision_skill）<br/>
+      ✅ 8 个工具（≥3 门槛）　✅ ≥1 个 Skill（skills/decision_skill）<br/>
       ✅ 界面（Streamlit + 终端 + 独立 HTML）　✅ 危险操作确认<br/>
       ✅ README + HTML 幻灯片　✅ 提交到自己的 Git 仓库
     </div>

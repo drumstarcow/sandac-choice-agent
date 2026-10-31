@@ -26,8 +26,9 @@
     width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;
     border-top:26px solid #e63946;z-index:5;}
   .hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    width:54px;height:54px;background:#fff;border-radius:50%;border:3px solid #222;
-    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;z-index:4;}
+    width:56px;height:56px;background:#fff;border-radius:50%;border:3px solid #222;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;z-index:4;
+    cursor:pointer;font-family:inherit;color:#222;transition:none;}
   .btns{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap;}
   button{cursor:pointer;border:none;border-radius:24px;padding:11px 20px;font-size:15px;font-weight:700;
     background:var(--pink);color:#fff;box-shadow:0 4px 12px rgba(255,107,107,.35);transition:.15s;}
@@ -225,7 +226,7 @@ function renderWheel(){
   const box=document.createElement("div"); box.className="wheelbox";
   const ptr=document.createElement("div"); ptr.className="pointer"; box.appendChild(ptr);
   box.appendChild(cv);
-  const hub=document.createElement("div"); hub.className="hub"; hub.textContent="转一下"; box.appendChild(hub);
+  const hub=document.createElement("button"); hub.className="hub"; hub.textContent="转一下"; hub.onclick=doSpin; hub.setAttribute("aria-label","转一下"); box.appendChild(hub);
   stage.appendChild(box); drawWheel();
   result.textContent = wheelState.spinning?"转动中…":(wheelState.options[wheelState.lastIdx]?"指向："+wheelState.options[wheelState.lastIdx]:"");
   btns.innerHTML="";

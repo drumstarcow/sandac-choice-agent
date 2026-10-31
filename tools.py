@@ -27,6 +27,62 @@ def _load():
         return json.load(f)
 
 
+# ------------------------- 转盘权重概率引擎 -------------------------
+class WheelEngine:
+    """真实权重概率模型（对应《转盘设计建议》第二节）。
+
+    - 抽中后衰减：w *= 0.6，避免连着抽同一个
+    - 被拒绝：本次会话内 w = 0，永不复活（直到新会话/重置）
+    - 归一化：每次抽取前 p_i = w_i / Σw
+    - 空态：全部归零时由调用方走兜底（不空转）
+    权重存于内存（每会话一份），驱动大转盘“真的会变”的概率，
+    转盘每个扇区都会显示当前概率%，拒绝后重排屏幕上可见。
+    """
+
+    DECAY = 0.6  # 抽中后衰减系数
+
+    def __init__(self):
+        self.weights = {}  # layer -> {option: weight}
+
+    def _ensure(self, layer, options):
+        w = self.weights.setdefault(layer, {})
+        opts = list(options)
+        # 删除已不在候选集里的（被拒绝剔除的）项
+        for k in list(w):
+            if k not in opts:
+                del w[k]
+        # 新出现的项默认权重 1.0；保留存活项的已有权重（含衰减历史）
+        for o in opts:
+            w.setdefault(o, 1.0)
+        return w
+
+    def probabilities(self, layer, options):
+        """返回 {option: 概率}（已归一化）。"""
+        w = self._ensure(layer, options)
+        total = sum(w.values())
+        if total <= 0:
+            return {o: 0.0 for o in options}
+        return {o: round(w[o] / total, 4) for o in options}
+
+    def decay(self, layer, item):
+        """抽中后衰减（避免连抽同一个）。"""
+        w = self.weights.get(layer)
+        if w and item in w:
+            w[item] *= self.DECAY
+
+    def reject(self, layer, item):
+        """拒绝：本会话内该选项权重清零，永不复活。"""
+        w = self.weights.get(layer)
+        if w and item in w:
+            w[item] = 0.0
+
+    def reset_layer(self, layer):
+        self.weights.pop(layer, None)
+
+    def reset(self):
+        self.weights = {}
+
+
 # ------------------------- 转盘工具 -------------------------
 def build_wheel(scene, preference="", budget=None):
     """根据决策层级生成一个转盘配置（真实选项来自数据文件）。
@@ -179,6 +235,17 @@ def set_profile(field, value):
     return profile_mod.update_profile(field, value)
 
 
+def save_preference(key, value):
+    """【需确认的危险写操作】记住用户的一项稳定偏好（口味/忌口/饮食限制/称呼）。
+
+    与 set_profile 的区别：本工具由 Agent 层做**二次确认**（先回显“要记住：xxx，对吗？”
+    再执行），是可审计、可撤销的写操作。key 取值：
+      dislikes(忌口,如“辣”) / taste_prefs(口味偏好,如“不辣”) /
+      dietary(饮食限制,如“清真”) / name(称呼)。
+    """
+    return profile_mod.update_profile(key, value)
+
+
 # ------------------------- 就近综合推荐（定位 + 距离 + 性价比 + 评分） -------------------------
 def _haversine(lat1, lng1, lat2, lng2):
     """两点间直线距离（km），真实球面计算。"""
@@ -311,13 +378,14 @@ TOOL_REGISTRY = {
     "share_with_roommate": share_with_roommate,
     "get_profile": get_profile,
     "set_profile": set_profile,
+    "save_preference": save_preference,
     "recommend_nearby_food": recommend_nearby_food,
     "finalize_recommend": finalize_recommend,
     "get_recent_profile": get_recent_profile,
 }
 
-# 危险操作：涉及对外发送，必须经用户确认才能执行
-DANGEROUS_TOOLS = {"share_with_roommate"}
+# 危险操作：涉及对外发送 / 写入长期记忆，必须经用户确认才能执行
+DANGEROUS_TOOLS = {"share_with_roommate", "save_preference"}
 
 TOOL_SCHEMAS = [
     {
@@ -382,14 +450,29 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "set_profile",
-            "description": "更新用户画像某一字段（跨轮记住用户偏好）。字段 field 取值：campus(校区名，如“金海校区”)/ budget_cap(金额上限元或“不限”)/ taste_prefs(口味偏好，逗号分隔如“不辣”)/ dislikes(忌口)/ dietary(饮食限制如“清真”)/ name(称呼)。value 为对应值。",
+            "description": "更新用户画像的“非敏感”字段（跨轮记住用户偏好）。仅用于 campus(校区)/ budget_cap(金额上限元或“不限”)/ name(称呼) 这类不敏感设置，直接写入无需确认。口味/忌口/饮食限制请用 save_preference（需确认）。",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "field": {"type": "string", "description": "要更新的字段名：campus/budget_cap/taste_prefs/dislikes/dietary/name"},
+                    "field": {"type": "string", "description": "要更新的字段名：campus/budget_cap/name"},
                     "value": {"type": "string", "description": "字段值"}
                 },
                 "required": ["field", "value"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "save_preference",
+            "description": "【需用户确认】记住用户的一项稳定偏好（写操作，Agent 会先回显确认再写入，可审计可撤销）。用于用户说“不吃辣/爱吃不辣/清真/叫我xx”等。key 取值：dislikes(忌口,如“辣”)/ taste_prefs(口味偏好,如“不辣”)/ dietary(饮食限制,如“清真”)/ name(称呼)。value 为对应值。用户说“忘掉xx”时同样用本工具把对应值置空。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "key": {"type": "string", "description": "画像字段：dislikes/taste_prefs/dietary/name"},
+                    "value": {"type": "string", "description": "字段值"}
+                },
+                "required": ["key", "value"]
             }
         }
     },

@@ -14,6 +14,7 @@ import json
 import random
 import datetime
 import streamlit as st
+import streamlit.components.v1 as components
 from agent import ChoiceAgent
 import tools
 import profile as profile_mod
@@ -50,7 +51,7 @@ def onboard_no_idea():
     st.session_state.messages.append({"role": "assistant", "content": "既然没想法，那不如把选择权交给命运吧！🎰 来转大转盘～"})
     st.session_state.history.append({"role": "assistant", "content": "既然没想法，那不如把选择权交给命运吧！🎰"})
     st.session_state.cur_wheel = json.loads(tools.build_wheel("where"))
-    st.session_state.spin_index = 0
+    st.session_state.spin_index = None
     st.session_state.onboarded = True
     st.session_state.card = None
     st.session_state.recommend_result = None
@@ -68,6 +69,13 @@ def _looks_like_have_idea(text):
         return False
     return any(k in t for k in ["想吃", "想来", "来份", "来个", "来点", "就要", "点个", "点一份",
                                 "整点", "搞点", "我想", "来碗", "来杯", "喝杯", "来只", "吃个", "吃份"])
+
+
+def _looks_like_no_idea(text):
+    """粗略判断用户是否表达了“没想法/随便/让我选”，应走大转盘。"""
+    t = text.strip()
+    return any(k in t for k in ["没想法", "不知道", "随便", "帮我选", "你定", "没想好",
+                                "不知道吃啥", "帮我决定", "你帮我", "交给命运", "转一下", "转盘"])
 
 
 def _extract_keyword(text):
@@ -94,7 +102,7 @@ if "pending" not in st.session_state:
 if "cur_wheel" not in st.session_state:
     st.session_state.cur_wheel = None
 if "spin_index" not in st.session_state:
-    st.session_state.spin_index = 0
+    st.session_state.spin_index = None
 if "choices" not in st.session_state:
     st.session_state.choices = {}
 if "dish_options" not in st.session_state:
@@ -107,6 +115,10 @@ if "recommend_result" not in st.session_state:
     st.session_state.recommend_result = None
 if "wheel_budget" not in st.session_state:
     st.session_state.wheel_budget = "不限"
+if "wheel_engine" not in st.session_state:
+    st.session_state.wheel_engine = tools.WheelEngine()
+if "wheel_nonce" not in st.session_state:
+    st.session_state.wheel_nonce = 0
 if "onboarded" not in st.session_state:
     st.session_state.onboarded = False
 # 智能体主动开场：进入即问“今天想好吃啥了不？”并引导二选一
@@ -118,34 +130,100 @@ if not st.session_state.messages:
 
 
 # ------------------------- 转盘 / 名片渲染 -------------------------
-def wheel_svg(options, highlight=-1):
-    n = len(options)
-    if n == 0:
-        return ""
-    import math
-    cx, cy, r = 200, 200, 170
-    svg = [f'<svg viewBox="0 0 400 400" width="360" height="360" xmlns="http://www.w3.org/2000/svg">']
-    svg.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>')
-    angles = [2 * math.pi * i / n for i in range(n)]
-    for i, opt in enumerate(options):
-        a0 = angles[i] - math.pi / 2
-        a1 = angles[(i + 1) % n] - math.pi / 2
-        x0, y0 = cx + r * math.cos(a0), cy + r * math.sin(a0)
-        x1, y1 = cx + r * math.cos(a1), cy + r * math.sin(a1)
-        large = 1 if (a1 - a0) > math.pi else 0
-        color = PALETTE[i % len(PALETTE)] if i != highlight else "#222"
-        svg.append(f'<path d="M{cx},{cy} L{x0:.1f},{y0:.1f} A{r},{r} 0 {large} 1 {x1:.1f},{y1:.1f} Z" fill="{color}" stroke="#fff" stroke-width="2"/>')
-        mid = (a0 + a1) / 2
-        lx, ly = cx + (r * 0.62) * math.cos(mid), cy + (r * 0.62) * math.sin(mid)
-        svg.append(f'<text x="{lx:.1f}" y="{ly:.1f}" font-size="15" fill="#fff" text-anchor="middle" dominant-baseline="middle" font-weight="bold">{opt}</text>')
-    svg.append(f'<polygon points="{cx},20 {cx-13},2 {cx+13},2" fill="#e63946"/>')
-    # 中心“转一下”按钮（视觉锚点，符合转盘中心放转动按钮的习惯）
-    svg.append(f'<circle cx="{cx}" cy="{cy}" r="38" fill="#e63946" stroke="#fff" stroke-width="3"/>')
-    svg.append(f'<circle cx="{cx}" cy="{cy}" r="38" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="6"/>')
-    svg.append(f'<text x="{cx}" y="{cy-2}" font-size="17" fill="#fff" text-anchor="middle" font-weight="bold">转一下</text>')
-    svg.append(f'<text x="{cx}" y="{cy+16}" font-size="10" fill="#fff" text-anchor="middle">点这里</text>')
-    svg.append('</svg>')
-    return "".join(svg)
+def build_wheel_html(options, probs, preset_idx=None):
+    """返回一个自包含的 HTML（含 SVG 转盘 + 真正居中可点击的「转一下」按钮）。
+
+    - 扇区按传入概率 probs 加权随机停驻（与后端 WheelEngine 同权，保证“真的会变”）
+    - 每个扇区显示当前概率%
+    - 中心「转一下」是真实 <button>，绝对定位于转盘正中，点一下就转
+    - preset_idx 不为 None 时，加载即把该扇区转到顶部指针下（用于“上次指向”回显）
+    - 用户点击转完后通过 Streamlit.setComponentValue 把 {action:'spin', idx} 回传给 Python
+    """
+    opts_js = json.dumps(options, ensure_ascii=False)
+    probs_js = json.dumps([round(p, 4) for p in probs])
+    preset = "null" if preset_idx is None else int(preset_idx)
+    html = r"""
+<div id="wx" style="position:relative;width:360px;height:360px;margin:0 auto">
+  <svg id="wsvg" viewBox="0 0 400 400" width="360" height="360" xmlns="http://www.w3.org/2000/svg">
+    <g id="wgrp"></g>
+    <polygon points="200,16 186,0 214,0" fill="#e63946"/>
+  </svg>
+  <button id="spinbtn" type="button"
+    style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+           width:84px;height:84px;border-radius:50%;border:4px solid #fff;
+           background:#e63946;color:#fff;font-size:18px;font-weight:bold;cursor:pointer;
+           box-shadow:0 6px 16px rgba(0,0,0,.35);line-height:1.1">转一下<br><span style="font-size:11px;font-weight:normal">点中间</span></button>
+</div>
+<script>
+(function(){
+  function sl(fn){ if(window.Streamlit){ fn(); } else { setTimeout(function(){ sl(fn); }, 40); } }
+  const options = __OPTIONS__;
+  const probs = __PROBS__;
+  const preset = __PRESET__;
+  const n = options.length;
+  const cx=200, cy=200, r=170;
+  const grp = document.getElementById('wgrp');
+  const PALETTE=["#FF6B6B","#FFD166","#06D6A0","#118AB2","#9B5DE5","#F15BB5","#00BBF9","#FEE440","#FB5607","#8338EC","#3A86FF","#FFBE0B"];
+  let html='';
+  const seg = 2*Math.PI/n;
+  for(let i=0;i<n;i++){
+    const a0 = i*seg - Math.PI/2;
+    const a1 = (i+1)*seg - Math.PI/2;
+    const x0=cx+r*Math.cos(a0), y0=cy+r*Math.sin(a0);
+    const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+    const large = (a1-a0)>Math.PI?1:0;
+    const color = PALETTE[i%PALETTE.length];
+    html += '<path id="sec'+i+'" d="M'+cx+','+cy+' L'+x0.toFixed(1)+','+y0.toFixed(1)+' A'+r+','+r+' 0 '+large+' 1 '+x1.toFixed(1)+','+y1.toFixed(1)+' Z" fill="'+color+'" stroke="#fff" stroke-width="2"/>';
+    const mid=(a0+a1)/2;
+    const lx=cx+(r*0.60)*Math.cos(mid), ly=cy+(r*0.60)*Math.sin(mid);
+    const pct=(probs[i]*100).toFixed(0);
+    html += '<text x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" font-size="14" fill="#fff" text-anchor="middle" dominant-baseline="middle" font-weight="bold">'+options[i]+'</text>';
+    html += '<text x="'+lx.toFixed(1)+'" y="'+(ly+16).toFixed(1)+'" font-size="10" fill="#fff" text-anchor="middle" dominant-baseline="middle">'+pct+'%</text>';
+  }
+  grp.innerHTML = html;
+  const labels = grp.querySelectorAll('text');
+  const paths = grp.querySelectorAll('path');
+  let spins = 0;
+  function getRotation(){ const m = grp.style.transform.match(/rotate\(([-\d.]+)deg\)/); return m? parseFloat(m[1]) : 0; }
+  function setRotation(deg, animate){
+    grp.style.transition = animate ? 'transform 1s cubic-bezier(.17,.67,.83,.67)' : 'none';
+    grp.style.transform = 'rotate('+deg+'deg)';
+    grp.style.transformOrigin = cx+'px '+cy+'px';
+  }
+  function upright(){
+    const cur = getRotation();
+    labels.forEach(function(t){ t.setAttribute('transform','rotate('+(-cur)+' '+cx+' '+cy+')'); });
+  }
+  function highlight(idx){
+    paths.forEach(function(p,i){ p.setAttribute('stroke', i===idx ? '#222' : '#fff'); p.setAttribute('stroke-width', i===idx ? '4' : '2'); });
+  }
+  if(preset!==null && n>0){
+    const segDeg = 360/n;
+    const target = 360*5 - (preset+0.5)*segDeg;
+    setRotation(target, false);
+    setTimeout(function(){ upright(); highlight(preset); }, 30);
+  }
+  document.getElementById('spinbtn').addEventListener('click', function(){
+    if(n===0) return;
+    let rr=Math.random(), acc=0, idx=0;
+    for(let i=0;i<n;i++){ acc+=probs[i]; if(rr<=acc){ idx=i; break; } }
+    const segDeg=360/n;
+    spins += 5;
+    const target = 360*spins - (idx+0.5)*segDeg;
+    highlight(idx);
+    setRotation(target, true);
+    setTimeout(function(){
+      upright();
+      sl(function(){ window.Streamlit.setComponentValue({action:'spin', idx:idx, item:options[idx]}); });
+    }, 1050);
+  });
+  sl(function(){ window.Streamlit.setFrameHeight(430); });
+})();
+</script>
+"""
+    return (html.replace("__OPTIONS__", opts_js)
+                .replace("__PROBS__", probs_js)
+                .replace("__PRESET__", preset))
 
 
 def render_steps(steps):
@@ -162,7 +240,7 @@ def render_wheel():
         return
     opts = w["options"]
     st.subheader(w["title"])
-    # 💰 金额上限：贯穿整个大转盘流程（菜品层实时过滤，前两层仅记录并传递到菜品层生效）
+    # 💰 金额上限：贯穿整个大转盘流程（菜品层实时过滤）
     budget_opts = ["不限", "10", "15", "20", "25", "30", "40"]
     cur_b = st.session_state.wheel_budget
     nb = st.selectbox("💰 金额上限（用于菜品筛选）", budget_opts,
@@ -174,26 +252,35 @@ def render_wheel():
             nw = json.loads(tools.build_wheel("dish", st.session_state.choices.get("spice", ""), nb))
             st.session_state.cur_wheel = nw
             st.session_state.dish_options = list(nw["options"])
-            st.session_state.spin_index = 0
+            st.session_state.wheel_engine.reset_layer("dish")
+        st.session_state.wheel_nonce += 1
+        st.session_state.spin_index = None
         st.rerun()
-    # 转盘居中展示，中心是醒目的“转一下”按钮
-    st.markdown(f'<div style="display:flex;justify-content:center">{wheel_svg(opts, st.session_state.spin_index)}</div>',
-                unsafe_allow_html=True)
-    picked = opts[st.session_state.spin_index] if opts else ""
-    st.info(f"🎯 当前指向：**{picked}**")
-    # “转一下”按钮放在转盘正下方居中（与中心视觉按钮呼应）
-    _, center_col, _ = st.columns([1, 1.4, 1])
-    with center_col:
-        if st.button("🎯 转一下", type="primary", key="spin", use_container_width=True):
-            st.session_state.spin_index = random.randrange(len(opts))
+    # 转盘（自包含 HTML 组件，中心“转一下”是真正可点击的按钮）
+    probs = st.session_state.wheel_engine.probabilities(w["scene"], opts)
+    prob_list = [probs[o] for o in opts]
+    spin = st.session_state.spin_index
+    preset = spin if (spin is not None and 0 <= spin < len(opts)) else None
+    val = components.v1.html(build_wheel_html(opts, prob_list, preset), height=430,
+                             key=f"wheel_comp_{st.session_state.wheel_nonce}")
+    if isinstance(val, dict) and val.get("action") == "spin":
+        idx = int(val.get("idx", 0))
+        if 0 <= idx < len(opts):
+            st.session_state.spin_index = idx
+            st.session_state.wheel_engine.decay(w["scene"], opts[idx])  # 抽中衰减，避免连抽同一个
+            st.session_state.wheel_nonce += 1
             st.rerun()
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("✅ 接受", key="accept", use_container_width=True):
-            handle_accept(w, picked)
-    with c2:
-        if st.button("❌ 拒绝 / 换一个", key="reject", use_container_width=True):
-            handle_reject(w, picked)
+    # 当前指向 + 接受 / 拒绝（Streamlit 按钮）
+    picked = opts[spin] if (spin is not None and 0 <= spin < len(opts)) else None
+    if picked is not None:
+        st.info(f"🎯 当前指向：**{picked}**　（扇区上的 % 就是它这次被抽中的概率；拒绝后其余会重新排）")
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("✅ 接受", key="accept", use_container_width=True, type="primary"):
+                handle_accept(w, picked)
+        with c2:
+            if st.button("❌ 拒绝 / 换一个", key="reject", use_container_width=True):
+                handle_reject(w, picked)
 
 
 def handle_accept(w, picked):
@@ -202,43 +289,47 @@ def handle_accept(w, picked):
         st.session_state.choices["where"] = picked
         nw = json.loads(tools.build_wheel("spice", picked))
         st.session_state.cur_wheel = nw
-        st.session_state.spin_index = 0
-        st.rerun()
     elif scene == "spice":
         st.session_state.choices["spice"] = picked
         nw = json.loads(tools.build_wheel("dish", picked, st.session_state.wheel_budget))
         st.session_state.cur_wheel = nw
         st.session_state.dish_options = list(nw["options"])
-        st.session_state.spin_index = 0
-        st.rerun()
+        st.session_state.wheel_engine.reset_layer("dish")  # 进入新菜品池，权重重置
     elif scene == "dish":
         st.session_state.choices["dish"] = picked
         st.session_state.card = tools.get_dish_card(picked)
         st.session_state.cur_wheel = None
-        st.rerun()
+    st.session_state.wheel_nonce += 1
+    st.session_state.spin_index = None
+    st.rerun()
 
 
 def handle_reject(w, picked):
     scene = w["scene"]
-    opts = list(w["options"])
-    if picked in opts:
-        opts.remove(picked)
+    st.session_state.wheel_engine.reject(scene, picked)  # 权重清零，本会话永不复活
+    opts = [o for o in w["options"] if o != picked]
     if scene == "dish":
         st.session_state.dish_options = opts
-    if len(opts) <= 1:
-        if opts:
-            handle_accept({"scene": scene, "options": opts}, opts[0])
-            return
-        else:
-            st.session_state.cur_wheel = None
-            st.warning("所有选项都被拒绝了，请重新描述需求。")
-            st.rerun()
+    if not opts:
+        # 全部拒完：不空转，把选择权交回用户
+        st.session_state.cur_wheel = None
+        msg = (f"这一层你全划掉了，「{picked}」也不会再出现。\n"
+               f"今天换个路子？你直接说想吃啥，或点下方「要方案」我帮你找附近的。")
+        st.session_state.messages.append({"role": "assistant", "content": msg})
+        st.session_state.history.append({"role": "assistant", "content": msg})
+        st.session_state.wheel_nonce += 1
+        st.session_state.spin_index = None
+        st.rerun()
     nw = dict(w)
     nw["options"] = opts
     if scene == "dish":
         nw["title"] = "🍽️ 转到哪道菜？（不喜欢就拒绝，剔掉重转）"
     st.session_state.cur_wheel = nw
-    st.session_state.spin_index = 0
+    msg = f"好，把「{picked}」划掉了，它不会再出现在这一层。给你重转～（看，剩下的概率已经重新排过）"
+    st.session_state.messages.append({"role": "assistant", "content": msg})
+    st.session_state.history.append({"role": "assistant", "content": msg})
+    st.session_state.wheel_nonce += 1
+    st.session_state.spin_index = None
     st.rerun()
 
 
@@ -272,6 +363,7 @@ def render_card():
             opts = list(st.session_state.dish_options)
             if d["name"] in opts:
                 opts.remove(d["name"])
+                st.session_state.wheel_engine.reject("dish", d["name"])  # 名片换一个＝拒绝这道
             st.session_state.dish_options = opts
             st.session_state.card = None
             if opts:
@@ -280,7 +372,9 @@ def render_card():
             else:
                 st.session_state.cur_wheel = json.loads(tools.build_wheel("dish", st.session_state.choices.get("spice", ""), st.session_state.wheel_budget))
                 st.session_state.dish_options = list(st.session_state.cur_wheel["options"])
-            st.session_state.spin_index = 0
+                st.session_state.wheel_engine.reset_layer("dish")
+            st.session_state.wheel_nonce += 1
+            st.session_state.spin_index = None
             st.rerun()
 
 
@@ -414,7 +508,7 @@ with st.sidebar:
             if k in ("messages", "history"):
                 st.session_state[k] = []
             elif k == "spin_index":
-                st.session_state[k] = 0
+                st.session_state[k] = None
             elif k == "choices":
                 st.session_state[k] = {}
             elif k == "dish_options":
@@ -422,6 +516,8 @@ with st.sidebar:
             else:
                 st.session_state[k] = None
         st.session_state.wheel_budget = "不限"
+        st.session_state.wheel_nonce = 0
+        st.session_state.wheel_engine.reset()
         st.rerun()
     st.divider()
     st.caption("数据源：data/food_data.json（菜品示例）、data/shops.json + data/campus.json（周边商户示例）。"
@@ -476,20 +572,28 @@ elif st.session_state.card:
 # 危险操作确认卡片
 if st.session_state.pending:
     p = st.session_state.pending
-    st.warning(f"⚠️ 检测到危险操作：**{p['tool']}**，参数：{json.dumps(p['args'], ensure_ascii=False)}")
-    st.write("这是对外发送动作，需你确认后才执行：")
+    if p["tool"] == "save_preference":
+        a = p["args"]
+        st.warning(f"⚠️ 要记住：**{a.get('key')} = {a.get('value')}**，对吗？")
+        st.write("这是写入你长期记忆的偏好（可审计、可撤销），确认后才保存：")
+        label_confirm, label_cancel = "✅ 对，记住", "❌ 不用记"
+    else:
+        st.warning(f"⚠️ 检测到危险操作：**{p['tool']}**，参数：{json.dumps(p['args'], ensure_ascii=False)}")
+        st.write("这是对外发送动作，需你确认后才执行：")
+        label_confirm, label_cancel = "✅ 确认发送", "❌ 取消"
     c1, c2 = st.columns(2)
     with c1:
-        if st.button("✅ 确认发送", type="primary", key="confirm_send"):
+        if st.button(label_confirm, type="primary", key="confirm_send"):
             r = st.session_state.agent.resume_after_approve(p, "", st.session_state.history)
             st.session_state.messages.append({"role": "assistant", "content": r["content"], "steps": r["steps"]})
             st.session_state.history.append({"role": "assistant", "content": r["content"]})
             st.session_state.pending = None
             st.rerun()
     with c2:
-        if st.button("❌ 取消", key="cancel_send"):
-            st.session_state.messages.append({"role": "assistant", "content": "已取消发送（危险操作未执行）。"})
-            st.session_state.history.append({"role": "assistant", "content": "已取消发送。"})
+        if st.button(label_cancel, key="cancel_send"):
+            note = "已取消（偏好未写入）。" if p["tool"] == "save_preference" else "已取消发送（危险操作未执行）。"
+            st.session_state.messages.append({"role": "assistant", "content": note})
+            st.session_state.history.append({"role": "assistant", "content": note})
             st.session_state.pending = None
             st.rerun()
 
@@ -529,7 +633,7 @@ if prompt := st.chat_input("例如：不知道今天吃啥，帮我选 / 我选�
         elif r["status"] == "wheel":
             render_steps(r.get("steps", []))
             st.session_state.cur_wheel = r["wheel"]
-            st.session_state.spin_index = 0
+            st.session_state.spin_index = None
             if r.get("content"):
                 st.write(r["content"])
             st.session_state.messages.append({"role": "assistant", "content": r.get("content") or "来转一下大转盘吧！", "steps": r.get("steps", [])})
@@ -561,6 +665,16 @@ if prompt := st.chat_input("例如：不知道今天吃啥，帮我选 / 我选�
                     st.session_state.messages.append({"role": "assistant", "content": tip, "steps": [f"🔧 调用 recommend_nearby_food(keyword={kw!r})"]})
                     st.session_state.history.append({"role": "assistant", "content": tip})
                     st.rerun()
+            # 兜底②：用户说“没想法/随便/帮我选”，但模型没弹转盘时，确定性弹第一层转盘
+            elif _looks_like_no_idea(prompt) and not st.session_state.cur_wheel \
+                    and not st.session_state.recommend_result and not st.session_state.finalized:
+                st.session_state.cur_wheel = json.loads(tools.build_wheel("where"))
+                st.session_state.spin_index = None
+                st.session_state.wheel_nonce += 1
+                tip = "既然没想法，那不如把选择权交给命运吧🎰 点转盘中间的「转一下」～"
+                st.session_state.messages.append({"role": "assistant", "content": tip})
+                st.session_state.history.append({"role": "assistant", "content": tip})
+                st.rerun()
             render_steps(r.get("steps", []))
             st.write(r["content"])
             st.session_state.messages.append({"role": "assistant", "content": r["content"], "steps": r.get("steps", [])})
