@@ -318,11 +318,21 @@ def act_accept(key):
 
 
 def act_four(picked_id=None):
-    """四条并列推荐：用当前筛选条件下的真实候选池计算。"""
+    """四条并列推荐：用当前筛选条件下的真实候选池计算。
+
+    已经定下某道菜时，池子收窄成「这道菜的所有店」—— 用户真正要决定的是去哪家买，
+    四条就变成「综合最佳 / 最近 / 最便宜 / 评分最高」各指一家。只有一家在卖时仍按整桌菜比。
+    """
     pool = build_pool(meal_type=SESS.meal_type, spice=SESS.choices.get("spice", ""),
                       budget=None if SESS.budget in ("不限", "", None) else SESS.budget,
                       where=SESS.choices.get("where", ""),
                       cuisine=SESS.choices.get("cuisine", ""))
+    name = SESS.choices.get("dish")
+    if name:
+        same = [c for c in pool if (c.get("name") or "").strip() == name]
+        if len(same) >= 2:
+            pool = same
+            log(f"[FOUR] 「{name}」{len(same)} 家都有，改比店铺")
     payload, _ = _call("finalize", {"candidates_list": pool, "picked_id": picked_id}, layer="four")
     if not payload:
         payload = json.loads(tools.finalize(pool, picked_id=picked_id))

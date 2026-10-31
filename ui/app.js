@@ -41,6 +41,13 @@ async function init() {
   if (auto === 'demo') runDemo();
   else if (auto === 'wheel') startWheel();
   else if (auto === 'card') jumpToCard();
+  else if (auto === 'twice') {
+    // 排查用：菜品格子层连着转两次（模拟「转完不点就要这个，又点了一次转一下」）
+    await jumpLayer('dish', '菜品');
+    await sleep(400);
+    const b = document.querySelector('#gridSpin');
+    if (b) { b.click(); await sleep(3600); b.click(); await sleep(1500); }
+  }
   else if (['meal', 'where', 'spice', 'cuisine', 'dish'].includes(auto)) {
     await jumpLayer(auto, { meal: '餐别', where: '场景', spice: '口味', cuisine: '菜系', dish: '菜品' }[auto]);
   }
@@ -465,17 +472,16 @@ function renderGrid(stage, st) {
   stage.appendChild(bar);
 
   const grid = el('div', 'grid');
-  // 同名菜（三家「烤串」）光看菜名分不清，只有重名时才补店名；
-  // 食堂一整个窗口 8 道菜都写「第二食堂·风味窗口」纯属噪音，不显示。
-  const dup = {};
-  items.forEach(it => { dup[it.name] = (dup[it.name] || 0) + 1; });
+  // 同一道菜只占一格（后端已按菜名合并）。多家店在卖的，标「N 家都有 · ¥X 起」，
+  // 具体去哪家留到选完这道菜之后的四条里比。
   items.forEach((it, i) => {
-    const shop = dup[it.name] > 1 ? shopShort(it.shop) : '';
+    const n = it.n_shops || 1;
+    const price = n > 1 ? `¥${it.price_min ?? it.price} 起` : `¥${it.price}`;
     const c = el('div', 'cell',
       `<img src="${esc(it.img || '/plate/' + it.id + '.svg')}" alt="${esc(it.name)}" loading="eager">
        <div class="cell-meta"><span class="cell-name">${esc(it.name)}</span>
-       <span class="cell-price">¥${it.price}</span>
-       ${shop ? `<span class="cell-shop">${esc(shop)}</span>` : ''}</div>`);
+       <span class="cell-price">${esc(price)}</span>
+       ${n > 1 ? `<span class="cell-shop">${n} 家都有</span>` : ''}</div>`);
     c.dataset.i = i;
     grid.appendChild(c);
   });
@@ -524,6 +530,9 @@ async function jumpTo(wv) {
   const cells = [...document.querySelectorAll('.cell')];
   if (!cells.length) return;
   const n = cells.length;
+  // 先擦掉上一轮留下的落点标记：转完不点「就要这个」直接再转一次时，
+  // 旧的 land / dim 还在，格子上就会同时挂着两个「转到了」。
+  cells.forEach(c => c.classList.remove('hot', 'land', 'dim'));
   // 格子越多，跳的圈数越多，否则 20+ 格时看起来只在一个角落打转
   const jumps = Math.max(28, Math.min(44, n + 12));
   const target = wv.pickedIndex;
@@ -582,14 +591,22 @@ function renderCard(stage, st) {
   no.onclick = async () => { await API.post('/api/again'); await refresh(); };
 
   if (st.four && st.four.groups && st.four.groups.length) {
-    stage.appendChild(el('p', 'stage-sub',
-      `同一条件下另有 ${Math.max(0, st.four.groups.length - 1)} 条备选，往下滑就是四条并排对比`));
+    const gs = st.four.groups;
+    const other = Math.max(0, gs.length - 1);
+    const sameDish = gs.length > 1 && gs.every(g => g.item.name === gs[0].item.name);
+    stage.appendChild(el('p', 'stage-sub', sameDish
+      ? `这道菜还有 ${other} 家在卖，往下滑看看哪家更值（也可以点「换一个」换道菜）`
+      : `同一条件下另有 ${other} 条备选，往下滑就是四条并排对比`));
     renderFour(stage, st);
   }
 }
 
 function fourTitle(four) {
   const n = (four.groups || []).length;
+  const gs = four.groups || [];
+  // 选完某道菜后，四条比的是「去哪家买」：名字都一样，别再说「符合条件的就这几条」
+  const sameDish = n > 1 && gs.every(g => g.item.name === gs[0].item.name);
+  if (sameDish) return `这道菜 ${n} 家都在卖，挑一家去`;
   if (four.keyword && four.matched === false) {
     return `没有「${four.keyword}」，换成这些？`;
   }

@@ -4,7 +4,7 @@
 检查四件事：
 1. 每层的选项是不是数据里真有的（不是前端假造）；
 2. 拒绝到只剩一个时，提示与「随便」自动撤下是否生效；
-3. 菜品格子是否一菜不漏（和候选池数量对得上，不按评分截断）；
+3. 菜品格子是否一菜一格（同名菜多家店合并，不按评分截断），选完菜后四条是否改比店铺；
 4. 隐藏款「重口猎奇」只在前面三层全选「随便」时才出现。
 """
 import sys
@@ -12,6 +12,7 @@ import sys
 sys.path.insert(0, ".")
 
 import server  # noqa: E402
+import tools   # noqa: E402
 
 
 def dump(tag, r):
@@ -40,21 +41,33 @@ def main():
 
     cuisine = w["options"][0]["key"]
     w = dump("选 %s" % cuisine, server.act_accept(cuisine))
-    print("        格子数 =", len(w["options"]), "（这一类有几个候选就有几格）")
-    assert len(w["options"]) == w["options"][0] and True or True
+    names = [o["key"] for o in w["options"]]
+    pool = tools.candidates(meal_type="meal", spice="辣", where="食堂", cuisine=cuisine)
+    uniq = list(dict.fromkeys(c["name"] for c in pool))
+    print("        候选 %d 个 → 格子 %d 个（同名合并后）" % (len(pool), len(names)))
+    assert names == uniq, "格子不是按菜名去重的候选（顺序/内容对不上）"
+    assert len(names) == len(set(names)), "格子里还有重名菜"
+    assert all(not i.get("n_shops") or i["n_shops"] >= 2 for i in w["items"]), "n_shops 标记不对"
 
     s = server.act_spin()
     picked = (s.get("wheel") or {}).get("picked")
     print("        抽中:", picked)
     r = server.act_accept(picked)
     four = r.get("four") or {}
+    gs = four.get("groups", [])
     print("名片:", (r.get("card") or {}).get("name"),
-          "| 四条:", [g["label"] + ":" + g["item"]["name"] for g in four.get("groups", [])])
-    assert len(four.get("groups", [])) == 4, "四条不足"
+          "| 四条:", [g["label"] + ":" + g["item"]["name"] + "@" + (g["item"].get("shop") or "") for g in gs])
+    same = [c for c in pool if c["name"] == picked]
+    if len(same) >= 2:
+        assert all(g["item"]["name"] == picked for g in gs), "多店菜的四条应该是同一道菜"
+        assert len({g["item"]["shop"] for g in gs}) == len(gs), "四条应各是一家店"
+        assert len(gs) >= 2, "多店菜至少有两条店铺方案"
+    else:
+        assert len(gs) == 4, "四条不足"
 
     print()
     print("=" * 70)
-    print("二、拒绝到只剩一个：提示 + 「随便」自动撤下")
+    print("二、拒绝到只剩一个：收敛 + 提示")
     print("=" * 70)
     server.SESS.reset()
     server.act_build_meal()
@@ -62,8 +75,9 @@ def main():
     dump("拒食堂", server.act_reject("食堂"))
     r = server.act_reject("外面吃")
     w = dump("再拒外面吃", r)
-    assert [o["key"] for o in w["options"]] == ["外卖"], "「随便」没被自动撤下"
-    print("        提示文案核对：", "随便" in (r.get("note") or ""), "自动撤下" in (r.get("note") or ""))
+    assert [o["key"] for o in w["options"]] == ["外卖"], "拒到只剩一个时没收敛到最后一个真选项"
+    assert "只剩" in (r.get("note") or ""), "只剩一个时没给出提示"
+    print("        提示文案：", r.get("note"))
 
     print()
     print("=" * 70)

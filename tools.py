@@ -357,15 +357,33 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where="", cuisi
         if not pool:
             pool = candidates(meal_type=mt, budget=budget, where=where)
             note = "条件太严，已放宽到该场景全部菜品"
-        seen, ordered = set(), []
         if cuisine == CUISINE_LOW:
             # 猎奇区就按评分从低到高排，别被「价格升序」打乱
             pool = sorted(pool, key=lambda x: (float(x.get("rating", 0)),
                                                -float(x.get("distance", 0))))
+        # 同一道菜只占一个格子：三家的「冰鲜柠檬水」是同一种菜，不该在盘上出现三次。
+        # 去重后格子上写「3 家都有 · ¥6 起」，选完这道菜再在四条里比哪家更划算/更近/评分更高。
+        ordered, groups = [], {}
         for d in pool:
-            if d["id"] not in seen:
-                seen.add(d["id"])
-                ordered.append(d)
+            nm = (d.get("name") or "").strip()
+            if not nm:
+                continue
+            if nm in groups:
+                groups[nm].append(d)
+                continue
+            groups[nm] = [d]
+            ordered.append(d)
+        for i, d in enumerate(ordered):
+            same = groups[(d.get("name") or "").strip()]
+            if len(same) > 1:
+                # 代表店：最便宜 → 最近 → 评分高。格子上标的是这家的价，另标「N 家都有」
+                rep = min(same, key=lambda x: (float(x.get("price", 0)),
+                                               float(x.get("distance", 0)),
+                                               -float(x.get("rating", 0))))
+                rep = dict(rep)
+                rep["n_shops"] = len(same)
+                rep["price_min"] = min(float(x.get("price", 0)) for x in same)
+                ordered[i] = rep
         total = len(ordered)
         # 一个都不淘汰：随机抽签的前提是所有候选都在格子里（格子层用网格换行排版）
         if GRID_CAP and total > GRID_CAP:
@@ -386,6 +404,10 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where="", cuisi
             title = "🍽️ 转到哪道菜？（不喜欢就拒绝，剔掉重转）"
         if budget not in (None, "", "不限"):
             title += f"  ｜ 预算≤￥{float(budget):.0f}"
+        multi = sum(1 for v in groups.values() if len(v) > 1)
+        if multi:
+            tip = f"{multi} 道菜有多家店在卖，盘上合成了一个格子；选完这道菜，下面四条按最近/最便宜/评分给你比店"
+            note = f"{note}；{tip}" if note else tip
         ctx = " · ".join(x for x in (where, preference, cuisine) if x and x != "随便")
     else:
         return json.dumps({"error": f"未知层级：{scene}"}, ensure_ascii=False)
@@ -514,9 +536,16 @@ def finalize(candidates_list, picked_id=None, criteria_note=""):
         nd = _norm(float(c["distance"]), mind, maxd, invert=True)
         c["score"] = round(0.5 * nr + 0.3 * npt + 0.2 * nd, 3)
 
+    # 池子里只有一道菜的时候（选完菜品再看店），四条比的是「同一道菜去哪家买」；
+    # 池子里是一桌菜的时候，按菜名去重 —— 三家的柠檬水不该占四个坑。
+    names = {(c.get("name") or "").strip() for c in cands}
+    single = len(names) == 1 and "" not in names
+
     def key(c):
-        # 按「这道菜」去重：不同店同名的同一道菜（三家的柠檬水）不该占四个坑
-        return (c.get("name", "") or "").strip() or (c.get("shop", ""), c.get("id", ""))
+        nm = (c.get("name") or "").strip()
+        if single:
+            return (nm, c.get("shop") or "", c.get("id") or "")
+        return (nm,) if nm else (c.get("shop") or "", c.get("id") or "")
 
     specs = [
         ("best", "综合最佳", "🏆", sorted(cands, key=lambda x: -x["score"])),
@@ -549,7 +578,10 @@ def finalize(candidates_list, picked_id=None, criteria_note=""):
                        "picked": bool(picked_id) and pick.get("id") == picked_id})
 
     note = criteria_note.strip().rstrip("：:，,；; ")
-    if len(groups) >= len(specs):
+    if single and len(cands) > 1:
+        tail = f"这道菜 {len(cands)} 家都在卖，比的是去哪家买（综合 / 近 / 便宜 / 评分）"
+        note = f"{note}，{tail}" if note else tail
+    elif len(groups) >= len(specs):
         note = f"{note}，按四个维度各挑一条" if note else "按四个维度各挑一条"
     else:
         tail = "不重复的都在这儿了，没拿重复的凑数"
