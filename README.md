@@ -38,7 +38,7 @@
 | 必须有 **Tool Calling**（不能只做关键词 if-else） | 模型通过 Ollama 的 OpenAI 兼容接口**真实发起工具调用**（已验证 0.5B 模型可稳定调用） |
 | ≥3 个工具 / 或 1 个 MCP(≥2 工具) | **8 个工具**：`build_wheel` / `recommend_nearby_food` / `finalize_decision` / `finalize_recommend` / `share_with_roommate` / `get_profile` + `set_profile` + `save_preference`(需确认) / `get_recent_profile`。转盘随机化由独立**权重概率引擎 `WheelEngine`**（抽中衰减 / 拒绝清零 / 归一化）真实计算，**不是提示词里的 if-else** |
 | ≥1 个 Skill | `skills/decision_skill/`：技能清单 + 入口封装 |
-| 界面 | Streamlit 应用 `app.py`（交互式大转盘+推荐+画像面板）+ 终端 `cli.py` + 独立动画版 `wheel.html` |
+| 界面 | 终端智能体对话 `agent_chat.py`（★ 真 LLM + 真工具调用，过程可见）+ Streamlit 应用 `app.py` + 独立动画版 `wheel.html` |
 | 危险操作有确认 | 发给室友前必须用户点击确认，否则不执行 |
 | README + HTML 幻灯片 | 本文件 + `slides.html` |
 | 提交到自己的 Git 仓库 | 本仓库（GitCode: bravecow） |
@@ -49,7 +49,7 @@
 
 - **语言**：Python 3（标准库 `urllib` 调用模型，**零第三方依赖**，离线可跑；仅 Streamlit 界面需 `streamlit`）
 - **模型**：本地 Ollama，`buding-qwen05b-32k`（0.5B，离线、免 Key）；亦可在 `.env` 切换为百炼/OpenAI 兼容端点
-- **界面**：Streamlit（`app.py`）；终端（`cli.py`）；独立动画版 HTML+Canvas（`wheel.html`，双击即开、离线可用）
+- **界面**：终端对话 `agent_chat.py`（智能体本体演示）；Streamlit（`app.py`）；终端菜单 `cli.py`；独立动画版 HTML+Canvas（`wheel.html`，双击即开、离线可用）
 - **数据源**：`data/food_data.json`（菜品示例）、`data/shops.json`+`data/campus.json`（周边商户示例+校区真实经纬度）、`data/profile.json`（记忆画像）、`data/history.json`（选择历史）
 
 ---
@@ -58,12 +58,13 @@
 
 ```
 .
-├── agent.py                 # Agent 核心：系统提示词 + Tool Calling 循环 + 危险操作确认 + 记忆调用
+├── agent.py                 # Agent 核心：系统提示词 + Tool Calling 循环 + 分阶段工具作用域 + 危险操作确认
+├── agent_chat.py            # ★ 终端智能体对话（真 LLM + 真工具调用，过程直接打印在终端）
 ├── tools.py                 # 业务工具层：build_wheel / recommend_nearby_food / finalize_* / profile / recent_profile
 ├── profile.py               # 用户记忆画像：读取/更新/持久化
 ├── history.py               # 选择历史留痕 + 最近10次聚合为“近期画像”
 ├── app.py                   # Streamlit 界面（大转盘 + 就近推荐 + 记忆画像面板 + 历史/近期画像 + 工具调用过程）
-├── cli.py                   # 终端演示脚本（菜单：大转盘/推荐/画像/历史）
+├── cli.py                   # 终端菜单式脚本（不含 LLM，纯工具演示备用）
 ├── wheel.html               # 独立动画版（双模式：大转盘 + 就近推荐，双击离线打开）
 ├── skills/decision_skill/   # Skill 清单与入口封装
 ├── data/
@@ -90,24 +91,38 @@ ollama pull buding-qwen05b-32k
 ollama serve        # 默认监听 http://localhost:11434
 ```
 
-### 2. 运行 Streamlit 界面（推荐演示入口）
+### 2. 运行终端智能体对话（★ 真正的“智能体”演示入口）
 ```powershell
 cd <项目目录>
+python agent_chat.py            # 交互式：自己打字跟智能体聊
+python agent_chat.py --demo     # 自动演示：一路跑完，无需输入（上台/录屏用）
+```
+屏幕上会实时打印**模型真实发起的工具调用**（`🔧 调用 recommend_nearby_food({...})` / `↳ 返回结果`），
+这是「不是关键词 if-else」最直接的证据。转盘层会显示每项**实时概率与柱状条**，输入 `-菜名` 可拒绝剔除，概率当场重排。
+换更强模型：`python agent_chat.py --model qwen2.5:3b-instruct`（或设环境变量 `OLLAMA_MODEL`）。
+
+### 3. 运行 Streamlit 界面（图形化入口）
+```powershell
 pip install -r requirements.txt
 python -m streamlit run app.py
 # 浏览器打开 http://localhost:8501
 ```
 
-### 3. 运行终端演示（备用）
+### 4. 终端菜单式脚本（不含 LLM，纯工具演示备用）
 ```powershell
 python cli.py
 ```
 
-### 4. 独立动画版大转盘（最直观，双击即开）
-直接用浏览器打开 `wheel.html` 即可，无需启动任何服务；左侧切「📍 就近推荐」可体验校区定位+距离+评分推荐。可选联网调用本地 Ollama 生成一句“勾食欲”解说。
+### 5. 独立动画版大转盘（双击即开）
+直接用浏览器打开 `wheel.html` 即可，无需启动任何服务；左侧切「📍 就近推荐」可体验校区定位+距离+评分推荐。
 
-### 5. 切换为联网大模型（可选）
+### 6. 切换为联网大模型（可选）
 复制 `.env.example` 为 `.env`，修改 `OLLAMA_MODEL` 为百炼/OpenAI 兼容模型，并设置 `OPENAI_API_KEY` 与 `BASE_URL`。
+
+> **关于小模型（0.5B）的工程处理**：把 9 个工具一次性喂给 0.5B，它会随手挑错工具（问“想吃火锅”却去查历史）。
+> `agent.py` 里因此实现了 **分阶段工具作用域（`TOOL_SCOPES`）**：开场只暴露「推荐/转盘」两个工具，
+> 定案阶段只暴露 `finalize_*`（单工具时直接用 `tool_choice` 强制），模型仍自主决定「调哪个、填什么参数」。
+> 实测后「有想法→推荐」「没想法→转盘」「转盘→定案」三条链路均能稳定触发真实工具调用。
 
 ---
 

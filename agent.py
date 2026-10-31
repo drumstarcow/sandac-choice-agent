@@ -53,6 +53,72 @@ SYSTEM_PROMPT = """你是「吃饱饱助手」——一个跟大学生混熟了�
 【边界·别硬拽】遇到无关话题（比如「今天好累」）接一句人话就行，别硬把话题拽回转盘；工具之外的事（写作业等）老实说「这个我不擅长」。所有数据先调工具拿，严禁编造菜品/价格/店名/距离；涉及供应提醒「数据为示例，以实际为准」。"""
 
 
+# ============ 分阶段工具作用域（针对 0.5B 小模型的能力约束） ============
+# 实测：把 9 个工具一次性给 0.5B，它会随手挑错工具（问“想吃火锅”却调 get_recent_profile）。
+# 按对话阶段只暴露该阶段真正需要的 1~2 个工具后，模型能稳定选对工具并正确填参数
+# （keyword="火锅"、budget="30"、scene="where"）。模型仍自主决定「调哪个工具、传什么参数」，
+# 不是关键词 if-else——作用域只决定「这个阶段允许用哪几把工具」。
+TOOL_SCOPES = {
+    "opening": ["recommend_nearby_food", "build_wheel"],   # 开场分流：有想法→推荐；没想法→转盘
+    "wheel":   ["build_wheel"],                            # 转盘阶段：只需要造盘
+    "settle":  ["finalize_decision", "finalize_recommend"], # 定案：落盘产出物
+    "settle_dish": ["finalize_decision"],                  # 菜品定案（单工具，强制调用）
+    "settle_shop": ["finalize_recommend"],                 # 店铺定案（单工具，强制调用）
+    "memory":  ["set_profile", "save_preference", "get_profile"],  # 记忆写入/读取
+}
+
+# 小模型专用阶段提示词：短、带 few-shot、只讲这一步要干的事
+STAGE_PROMPTS = {
+    "opening": """你是「吃饱饱助手」，一个帮大学生决定吃什么的饭友。说话像朋友，简短，不用敬语。
+只做一件事：根据用户这句话，立刻调用一个工具，不要先聊天。
+
+【判断规则】
+- 用户说了具体想吃/想喝的东西（如"想吃火锅""来份牛肉面"）→ 调 recommend_nearby_food，keyword 只填食物名（如"火锅"）。
+- 用户说没想法/随便/不知道/你定/帮我选 → 调 build_wheel，scene 填 "where"。
+
+【示例】
+用户：想吃火锅 → recommend_nearby_food(keyword="火锅")
+用户：来份牛肉面 → recommend_nearby_food(keyword="牛肉面")
+用户：随便 → build_wheel(scene="where")
+用户：随便吧 → build_wheel(scene="where")
+用户：你帮我选 → build_wheel(scene="where")
+用户：不知道吃啥 → build_wheel(scene="where")
+
+严禁自己编店名、价格、距离。""",
+    "wheel": """你是「吃饱饱助手」。用户已经选了本层，你需要生成下一层转盘。
+立刻调用 build_wheel，scene 填下一层：where 之后是 spice，spice 之后是 dish。
+不要自己列菜品。只调用工具，不要多说话。""",
+    "settle": """你是「吃饱饱助手」。用户已确定选择，立刻调用工具把结果落盘，不要反问。
+
+【规则】
+- 定的是**菜品** → finalize_decision(where=, spice=, dish=)
+- 定的是**店铺** → finalize_recommend(name=, address=, distance_km=, avg_price=, rating=)
+
+【示例】
+用户：我要去食堂吃麻辣的鱼香肉丝盖饭，定了 → finalize_decision(where="食堂", spice="辣", dish="鱼香肉丝盖饭")
+用户：就吃鱼香肉丝盖饭，定了 → finalize_decision(where="食堂", spice="辣", dish="鱼香肉丝盖饭")
+
+不要重复提问，直接调工具。""",
+    "settle_dish": """立刻调用 finalize_decision 工具，把这三项填进去，不要说别的话：
+where = 吃饭地点（食堂/外卖/外面吃），spice = 口味（辣/不辣/随便），dish = 菜名。
+从对话里找这三项，找不到就填「不限」。""",
+    "settle_shop": """立刻调用 finalize_recommend 工具，把店名和人均价格填进去，不要说别的话。
+name = 店名，address = 地址，distance_km = 距离，avg_price = 人均，rating = 评分。""",
+    "memory": """你是「吃饱饱助手」。用户在告诉你偏好。立刻调用工具记录：
+校区/预算/称呼用 set_profile；口味/忌口/饮食限制用 save_preference。""",
+}
+
+
+def scoped_tools(scope):
+    """按阶段裁剪工具列表。scope=None 时返回全部工具。"""
+    if not scope:
+        return TOOL_SCHEMAS
+    names = set(TOOL_SCOPES.get(scope, []))
+    picked = [s for s in TOOL_SCHEMAS if s["function"]["name"] in names]
+    return picked or TOOL_SCHEMAS
+
+
+
 def _safe_json(s):
     try:
         return json.loads(s or "{}")
@@ -115,13 +181,16 @@ class ChoiceAgent:
         # 用本地 Ollama 的 OpenAI 兼容接口；temperature=0 提升工具调用可复现性
         self.model = MODEL
 
-    def _call_llm(self, messages, tools):
-        """调用 Ollama 的 OpenAI 兼容 /chat/completions 接口，返回原始响应 dict。"""
+    def _call_llm(self, messages, tools, tool_choice="auto"):
+        """调用 Ollama 的 OpenAI 兼容 /chat/completions 接口，返回原始响应 dict。
+
+        tool_choice 可为 "auto" 或 {"type":"function","function":{"name":...}}（强制某个工具）。
+        """
         payload = {
             "model": self.model,
             "messages": messages,
             "tools": tools,
-            "tool_choice": "auto",
+            "tool_choice": tool_choice,
             "temperature": 0,
             "stream": False,
         }
@@ -147,23 +216,33 @@ class ChoiceAgent:
         except Exception:
             return None
 
-    def chat(self, user_text, history, force_approve=False):
+    def chat(self, user_text, history, force_approve=False, scope=None):
         """一轮对话。
 
         history: 历史消息列表，元素为 {"role": "user"/"assistant", "content": str}
+        scope: 分阶段工具作用域（opening/wheel/settle/memory）。None = 全部工具。
+               小模型场景下传 scope 可显著提升工具选择准确率（见 TOOL_SCOPES）。
         返回:
           {"status": "confirm", "tool": str, "args": dict, ...}  —— 需要用户确认危险操作
           {"status": "wheel", "wheel": dict, "content": str, "steps": [...]} —— 需要展示转盘
+          {"status": "recommend", "recommend": dict, ...} —— 需要展示推荐表
           {"status": "done", "content": str, "steps": [...]} —— 普通结束（含 finalize 结果）
         """
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        system = STAGE_PROMPTS.get(scope, SYSTEM_PROMPT) if scope else SYSTEM_PROMPT
+        tools = scoped_tools(scope)
+        messages = [{"role": "system", "content": system}]
         for m in history:
             messages.append({"role": m["role"], "content": m["content"]})
         messages.append({"role": "user", "content": user_text})
 
         steps = []
+        # 该阶段只有一个工具时，直接强制 tool_choice——小模型不会「忘了调」，
+        # 但仍由模型自己填参数（真 Tool Calling）。
+        forced = "auto"
+        if scope and len(tools) == 1:
+            forced = {"type": "function", "function": {"name": tools[0]["function"]["name"]}}
         for _ in range(6):
-            raw = self._call_llm(messages, TOOL_SCHEMAS)
+            raw = self._call_llm(messages, tools, tool_choice=forced)
             if raw.get("error"):
                 return {"status": "done", "content": f"⚠️ 调用模型出错：{raw['error']}", "steps": steps}
             msg = self._parse_msg(raw)
