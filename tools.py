@@ -4,7 +4,7 @@
 - candidate 池：把「食堂菜品」与「周边店铺招牌」统一成同一种候选结构
   {id name shop price distance rating tags meal_type desc img}
 - WheelEngine：真实权重概率（抽中衰减 0.6 / 拒绝清零 / 归一化），**算法保持不变**
-- build_wheel：按层级造盘 —— meal(餐别) → where(场景) → spice(口味) → dish(菜品)
+- build_wheel：按层级造盘 —— meal(餐别) → where(场景) → spice(口味) → cuisine(菜系) → dish(菜品)
 - search_dish：点名直达（用户说了具体菜名，跳过转盘）
 - finalize：收尾四条并列推荐（综合最佳 / 最近 / 最便宜 / 评分最高，跨条去重）
 - plate_svg：本地生成 4:3 菜品图（离线可用）
@@ -27,7 +27,15 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 MEAL_LABELS = {"meal": "正餐", "dessert": "甜品饮料"}
 WALK_KM_PER_MIN = 0.08          # 步行速度 ≈ 80 m/min，用于“走 N 分钟”的理由文案
-GRID_CAP = 24                   # 菜品转盘最多放多少个格子（候选池已经上百了）
+GRID_CAP = 0                    # 0 = 不截断。随机的前提是「所有选项都在盘上」，
+                                # 格子放不下就靠网格换行 + 滚动解决，绝不按评分淘汰
+
+# 菜系层的分类顺序（和数据里的 cuisine 字段一一对应）
+CUISINE_ORDER = ["家常小炒", "清淡素菜", "风味小炒", "快餐简餐", "面食粉面", "火锅",
+                 "烧烤烤肉", "川湘辣菜", "西餐日韩", "小吃早餐", "奶茶", "咖啡", "甜点烘焙"]
+# 彩蛋分区：评分垫底的那几道单独成区（跨菜系，按评分从低到高取）
+CUISINE_LOW = "重口猎奇"
+LOW_RATING_N = 9
 
 
 # ------------------------- 数据读取 -------------------------
@@ -129,10 +137,12 @@ def _norm_meal_type(v):
 
 
 def _norm_scene(scene):
-    """把模型可能传歪的 scene 归一化到 meal / where / spice / dish。"""
+    """把模型可能传歪的 scene 归一化到 meal / where / spice / cuisine / dish。"""
     s = str(scene or "").strip().lower()
-    if s in ("meal", "where", "spice", "dish"):
+    if s in ("meal", "where", "spice", "cuisine", "dish"):
         return s
+    if any(k in s for k in ("菜系", "cuisine", "品类", "分类", "口味类型")):
+        return "cuisine"
     if any(k in s for k in ("餐别", "正餐", "甜品", "吃什么类型", "meal")):
         return "meal"
     if any(k in s for k in ("口味", "辣", "spice", "味道")):
@@ -144,13 +154,20 @@ def _norm_scene(scene):
     return "where"
 
 
-def candidates(meal_type="", spice="", budget=None, where="", keyword="", radius=None):
+def candidates(meal_type="", spice="", budget=None, where="", keyword="",
+               radius=None, cuisine=""):
     """统一候选池（食堂菜品 + 周边店铺招牌）。
 
-    过滤顺序：半径 → 餐别 → 场景 → 口味 → 预算 → 关键词。
-    口味“随便”/空 表示该层不参与过滤。
-    radius: 半径（km），None/0 表示不限。后续接实时定位时，直接把它换成
-            「用户到各店的距离」即可，算法不用改。
+    过滤顺序：半径 → 餐别 → 场景 → 菜系 → 口味 → 预算 → 关键词。
+
+    场景用 channels 表达（一家店可以既是「堂食」又能「外卖」）：
+      食堂菜品   → ["食堂"]
+      校内门店   → ["食堂"] +（能外送的再加 ["外卖"]）
+      周边店铺   → ["外面吃"] +（能外送的再加 ["外卖"]）
+    所以「外卖」= 真能送到宿舍的 75 家，不是「外面吃」换了个名字的假选项。
+
+    cuisine 传「重口猎奇」时不按菜系过滤，而是把池子里评分垫底的 N 个单独拎出来。
+    radius: 半径（km），None/0 表示不限；接实时定位后把 distance 换成「用户到店」即可。
     """
     meal_type = _norm_meal_type(meal_type)
     data = _load()
@@ -163,7 +180,9 @@ def candidates(meal_type="", spice="", budget=None, where="", keyword="", radius
             "price": d.get("price", 0), "distance": d.get("distance", 0.2),
             "rating": d.get("rating", 4.0), "tags": d.get("tags", []),
             "meal_type": d.get("meal_type", "meal"), "desc": d.get("desc", ""),
-            "img": d.get("img", ""), "where": "食堂", "source": "canteen",
+            "img": d.get("img", ""), "where": "食堂", "channels": ["食堂"],
+            "cuisine": d.get("cuisine") or "家常小炒",
+            "source": "canteen",
         })
 
     for s in _load_shops().get("shops", []):
@@ -174,14 +193,21 @@ def candidates(meal_type="", spice="", budget=None, where="", keyword="", radius
             dist = _haversine(center["lat"], center["lng"], s["lat"], s["lng"])
         else:
             continue
+        in_campus = s.get("area") == "校内"
+        # 校内门店（辛耕园、KFC、蜜雪、瑞幸…）属于「食堂」场景，不是「外面吃」
+        channels = ["食堂"] if in_campus else ["外面吃"]
+        if s.get("delivery"):
+            channels.append("外卖")
         out.append({
             "id": s.get("id"), "name": s.get("dish") or s.get("signature") or s.get("name"),
             "shop": s.get("name"), "price": s.get("avg_price", 0),
             "distance": round(dist, 2), "rating": s.get("rating", 4.0),
             "tags": s.get("tags", []), "meal_type": s.get("meal_type", "meal"),
             "desc": s.get("desc", ""), "img": s.get("img", ""),
-            # 校内门店（辛耕园、KFC、蜜雪、瑞幸…）属于「食堂」场景，不是「外面吃」
-            "where": "食堂" if s.get("area") == "校内" else "外面吃",
+            "where": "食堂" if in_campus else "外面吃",
+            "channels": channels,
+            "cuisine": s.get("cuisine") or "家常小炒",
+            "delivery": bool(s.get("delivery")),
             "source": "shop",
             "address": s.get("address", ""), "category": s.get("category", ""),
             "area": s.get("area", ""),
@@ -197,11 +223,12 @@ def candidates(meal_type="", spice="", budget=None, where="", keyword="", radius
     # 餐别
     if meal_type in ("meal", "dessert"):
         out = [c for c in out if c["meal_type"] == meal_type]
-    # 场景
-    if where == "食堂":
-        out = [c for c in out if c["where"] == "食堂"]
-    elif where in ("外面吃", "外卖"):   # 口头上说「点外卖」也落在周边店铺这一档
-        out = [c for c in out if c["where"] == "外面吃"]
+    # 场景（「随便」= 不限场景；外卖是外面吃的子集，所以不过滤就等于两者并集）
+    if where and where != "随便":
+        out = [c for c in out if where in (c.get("channels") or [c.get("where")])]
+    # 菜系（「重口猎奇」要等所有条件筛完再取，否则会把别的口味也捞进来）
+    if cuisine and cuisine != CUISINE_LOW:
+        out = [c for c in out if c.get("cuisine") == cuisine]
     # 口味
     if spice and spice != "随便":
         if spice == "辣":
@@ -224,30 +251,41 @@ def candidates(meal_type="", spice="", budget=None, where="", keyword="", radius
                                         + c.get("category", "") + c.get("desc", ""))]
         out = hit or out
 
+    # 彩蛋区：条件全部筛完之后，才把评分垫底的几个拎出来
+    if cuisine == CUISINE_LOW:
+        out = sorted(out, key=lambda c: (float(c.get("rating", 0)),
+                                         -float(c.get("distance", 0))))[:LOW_RATING_N]
+
     for c in out:
         c["walk_min"] = max(1, round(float(c["distance"]) / WALK_KM_PER_MIN))
     return out
 
 
 # ------------------------- 转盘工具 -------------------------
-def build_wheel(scene, preference="", budget=None, meal_type="", where=""):
+def _cuisine_rank(k):
+    """菜系按固定顺序排（数量相同时不乱跳）。"""
+    return CUISINE_ORDER.index(k) if k in CUISINE_ORDER else 99
+
+
+def build_wheel(scene, preference="", budget=None, meal_type="", where="", cuisine="",
+                unlock_low=False):
     """根据决策层级生成一个转盘配置（真实选项来自数据文件）。
 
-    scene:
-      - "meal"  第 0 层：餐别（正餐 / 甜品饮料，另有盘外「你替我定」）
-      - "where" 第 1 层：在哪吃（食堂 / 外面吃）
-      - "spice" 第 2 层：口味（辣 / 不辣，另有盘外「你替我定」）
-      - "dish"  第 3 层：具体菜品（按 餐别+口味+预算 过滤，带 items 供格子渲染）
-    preference: 上层已确定的上下文（口味 辣/不辣/随便）
-    budget: 金额上限（元），仅 dish 层生效
-    meal_type: meal / dessert，第 0 层结果，用于过滤菜品池
+    五层：meal(餐别) → where(场景) → spice(口味) → cuisine(菜系) → dish(菜品)
+      - "meal"    第 0 层：正餐 / 甜品饮料（另有盘外「都行」）
+      - "where"   第 1 层：食堂 / 外面吃 / 外卖 / 随便（四个真扇区）
+      - "spice"   第 2 层：辣 / 不辣（另有盘外「都行」；甜品这层自动跳过）
+      - "cuisine" 第 3 层：菜系，按当前池子的真实分布生成，末尾附彩蛋区「重口猎奇」
+      - "dish"    第 4 层：具体菜品（格子，封顶 GRID_CAP 个）
+    preference: 上层已确定的上下文（第 2 层是口味，第 3 层是菜系）
     """
     scene = _norm_scene(scene)
     data = _load()
     mt = _norm_meal_type(meal_type)
+    counts = {}
 
     if scene == "meal":
-        # 「随便」不再是扇区：它和真实选项混在一张盘上，一旦拒掉一个，
+        # 「随便」不占扇区：它和真实选项混在一张盘上，一旦拒掉一个，
         # 剩下的「随便」就等于另一个选项，转盘没有悬念，逻辑上是冗余的。
         # 改成盘外的一个「你替我定」按钮，扇区只放互斥的真实选项。
         options = ["正餐", "甜品饮料"]
@@ -256,36 +294,81 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where=""):
         items = []
         skip = {"key": "随便", "label": "都行，你替我定"}
     elif scene == "where":
-        options = data.get("where_options", ["食堂", "外面吃"])
+        # 场景层四个扇区都是真的：食堂/外面吃/外卖彼此有实质区别，
+        # 「随便」在这里不是冗余 —— 它代表「不限场景」，而且它一被选中就直接进下一层，
+        # 不需要像餐别层那样靠「拒掉一个」才显出多余。
+        options = list(data.get("where_options") or ["食堂", "外面吃"])
+        for extra in ("外卖", "随便"):
+            if extra not in options:
+                options.append(extra)
         title = "📍 今天在哪吃？"
         ctx = MEAL_LABELS.get(mt, "")
         items = []
         skip = None
+        counts = {o: len(candidates(meal_type=mt, where=o)) for o in options if o != "随便"}
+        counts["随便"] = len(candidates(meal_type=mt))
     elif scene == "spice":
         options = ["辣", "不辣"]
         title = "🌶️ 今天想吃点啥口味？"
         ctx = where
         items = []
         skip = {"key": "随便", "label": "都行，你替我定"}
-    elif scene == "dish":
-        pool = candidates(meal_type=mt, spice=preference, budget=budget, where=where)
+    elif scene == "cuisine":
+        pool = candidates(meal_type=mt, spice=preference, where=where)
         note = ""
         if not pool:
-            # 该组合筛空了（例如甜品选了“辣”）→ 放宽口味，不让转盘空转
-            pool = candidates(meal_type=mt, spice="", budget=budget, where=where)
-            note = "这个组合没筛出菜，已放宽口味限制"
+            pool = candidates(meal_type=mt, where=where)
+            note = f"「{preference}」没筛出东西，已放开口味"
+        for c in pool:
+            k = c.get("cuisine") or "家常小炒"
+            counts[k] = counts.get(k, 0) + 1
+        # 数量多的排前面；数量相同按固定菜系顺序，避免每次刷新顺序都在跳
+        options = sorted(counts, key=lambda k: (-counts[k], _cuisine_rank(k)))
+        # 哪怕这一类只有一道菜也保留：否则那道菜永远不可能被转到，
+        # 「所有选项都要在盘上」比「每个扇区都好看」更重要
+        # 隐藏款「重口猎奇」：只有前三层（餐别/场景/口味）全选了「随便」才解锁。
+        # 前三层都交给命运了，才配看全场评分垫底的那几道。
+        low = []
+        if unlock_low:
+            low = candidates(meal_type=mt, spice=preference, where=where, cuisine=CUISINE_LOW)
+        if len(low) >= 3:
+            options.append(CUISINE_LOW)
+            counts[CUISINE_LOW] = len(low)
+        ctx = " · ".join(x for x in (where, preference if preference != "随便" else "") if x)
+        items = []
+        skip = None
+        title = "🍜 想吃哪一类？"
+        if not note:
+            note = f"共 {len(pool)} 个候选，按菜系分成 {len(options)} 组（名字后面是这一组有几个）"
+        if CUISINE_LOW in options:
+            note += "　🌈 前三层你都选了「随便」，隐藏款「重口猎奇」已解锁"
+    elif scene == "dish":
+        pool = candidates(meal_type=mt, spice=preference, budget=budget,
+                          where=where, cuisine=cuisine)
+        note = ""
         if not pool:
-            pool = candidates(meal_type=mt, budget=budget)
-            note = "条件太严，已放宽到同餐别全部菜品"
+            # 该组合筛空了（例如火锅选了「不辣」）→ 放宽口味，不让转盘空转
+            pool = candidates(meal_type=mt, budget=budget, where=where, cuisine=cuisine)
+            note = "这个组合没筛出菜，已放宽口味限制"
+        if not pool and cuisine and cuisine != CUISINE_LOW:
+            pool = candidates(meal_type=mt, spice=preference, budget=budget, where=where)
+            note = f"「{cuisine}」在这组条件下没菜，已放宽到该场景全部菜系"
+            cuisine = ""
+        if not pool:
+            pool = candidates(meal_type=mt, budget=budget, where=where)
+            note = "条件太严，已放宽到该场景全部菜品"
         seen, ordered = set(), []
-        for d in sorted(pool, key=lambda x: (x.get("price", 0), -x.get("rating", 0))):
+        if cuisine == CUISINE_LOW:
+            # 猎奇区就按评分从低到高排，别被「价格升序」打乱
+            pool = sorted(pool, key=lambda x: (float(x.get("rating", 0)),
+                                               -float(x.get("distance", 0))))
+        for d in pool:
             if d["id"] not in seen:
                 seen.add(d["id"])
                 ordered.append(d)
         total = len(ordered)
-        # 格子层塞不下上百格（校区周边 + 食堂一共 170+ 个候选）：
-        # 盘上只放评分靠前的 CAP 个，其余仍参与「四条推荐」，只是不上盘。
-        if total > GRID_CAP:
+        # 一个都不淘汰：随机抽签的前提是所有候选都在格子里（格子层用网格换行排版）
+        if GRID_CAP and total > GRID_CAP:
             ordered = sorted(ordered, key=lambda x: (-float(x.get("rating", 0)),
                                                      float(x.get("distance", 0))))[:GRID_CAP]
             tail = f"共 {total} 个候选，盘上只放评分靠前的 {GRID_CAP} 个（其余仍参与四条推荐）"
@@ -293,10 +376,17 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where=""):
         options = [d["name"] for d in ordered]
         items = ordered
         skip = None
-        title = "🍽️ 转到哪道菜？（不喜欢就拒绝，剔掉重转）"
+        if cuisine == CUISINE_LOW:
+            title = "☠️ 重口猎奇区：敢不敢转一下？"
+            note = (f"全场评分垫底的 {total} 个，按分数从低到高取。"
+                    "分低不等于难吃，只说明点评里打分的人少或口碑偏冷门。")
+        elif cuisine:
+            title = f"🍽️ {cuisine}：转到哪道？"
+        else:
+            title = "🍽️ 转到哪道菜？（不喜欢就拒绝，剔掉重转）"
         if budget not in (None, "", "不限"):
             title += f"  ｜ 预算≤￥{float(budget):.0f}"
-        ctx = preference
+        ctx = " · ".join(x for x in (where, preference, cuisine) if x and x != "随便")
     else:
         return json.dumps({"error": f"未知层级：{scene}"}, ensure_ascii=False)
 
@@ -304,8 +394,9 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where=""):
         "__wheel__": True, "title": title, "scene": scene,
         "options": options, "ctx": ctx, "meal_type": mt,
         "where": where, "items": items, "skip": skip,
+        "counts": counts,
     }
-    if scene == "dish":
+    if scene in ("dish", "cuisine"):
         payload["note"] = note
     return json.dumps(payload, ensure_ascii=False)
 
@@ -823,12 +914,14 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "build_wheel",
-            "description": "生成一个“决策大转盘”的配置。scene 为决策层级：meal=第0层(正餐/甜品饮料/随便)；where=第1层(食堂/外面吃)；spice=第2层(辣/不辣/随便)；dish=第3层(具体菜品，按 preference 口味过滤)。preference 为上层已确定的上下文。选项来自真实数据。",
+            "description": "生成一个“决策大转盘”的配置（五层）。scene：meal=第0层(正餐/甜品饮料)；where=第1层(食堂/外面吃/外卖/随便)；spice=第2层(辣/不辣)；cuisine=第3层(菜系，按当前候选分布自动分组，末位附带“重口猎奇”彩蛋区)；dish=第4层(具体菜品格子)。preference 为上层已确定的上下文（第2层填口味，第3层填菜系）。选项全部来自真实数据。",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "scene": {"type": "string", "description": "决策层级：meal / where / spice / dish"},
-                    "preference": {"type": "string", "description": "上层上下文，如口味“辣/不辣/随便”，可为空"},
+                    "scene": {"type": "string", "description": "决策层级：meal / where / spice / cuisine / dish"},
+                    "preference": {"type": "string", "description": "上层上下文，如口味“辣/不辣/随便”、菜系名，可为空"},
+                    "cuisine": {"type": "string", "description": "菜系名（选场景后由上一层决定），可为空"},
+                    "where": {"type": "string", "description": "场景：食堂/外面吃/外卖/随便，可为空"},
                 },
                 "required": ["scene"],
             },

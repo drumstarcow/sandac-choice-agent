@@ -18,6 +18,8 @@
       "avg_price": 13,
       "rating": 4.1,
       "category": "食堂",
+      "cuisine": "快餐简餐",
+      "delivery": false,
       "tags": [
         "不辣",
         "快餐",
@@ -40,6 +42,8 @@
       "avg_price": 15,
       "rating": 4.1,
       "category": "食堂",
+      "cuisine": "快餐简餐",
+      "delivery": false,
       "tags": [
         "辣",
         "麻辣烫",
@@ -62,6 +66,8 @@
       "avg_price": 16,
       "rating": 4.0,
       "category": "食堂",
+      "cuisine": "小吃早餐",
+      "delivery": false,
       "tags": [
         "不辣",
         "小吃",
@@ -84,6 +90,8 @@
       "avg_price": 15,
       "rating": 4.0,
       "category": "食堂",
+      "cuisine": "家常小炒",
+      "delivery": false,
       "tags": [
         "不辣",
         "面",
@@ -106,6 +114,8 @@
       "avg_price": 27,
       "rating": 4.1,
       "category": "快餐",
+      "cuisine": "快餐简餐",
+      "delivery": true,
       "tags": [
         "辣",
         "快餐"
@@ -127,6 +137,8 @@
       "avg_price": 8,
       "rating": 3.7,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶",
@@ -149,6 +161,8 @@
       "avg_price": 17,
       "rating": 4.2,
       "category": "面包甜点",
+      "cuisine": "甜点烘焙",
+      "delivery": true,
       "tags": [
         "甜",
         "甜点",
@@ -171,6 +185,8 @@
       "avg_price": 12,
       "rating": 4.2,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡",
@@ -193,6 +209,8 @@
       "avg_price": 30,
       "rating": 4.0,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡",
@@ -215,6 +233,8 @@
       "avg_price": 9,
       "rating": 4.0,
       "category": "小吃街",
+      "cuisine": "小吃早餐",
+      "delivery": false,
       "tags": [
         "小吃",
         "早餐",
@@ -237,6 +257,8 @@
       "avg_price": 44,
       "rating": 4.6,
       "category": "台湾菜",
+      "cuisine": "快餐简餐",
+      "delivery": true,
       "tags": [
         "不辣",
         "饭",
@@ -259,6 +281,8 @@
       "avg_price": 89,
       "rating": 4.4,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "辣",
         "火锅",
@@ -281,6 +305,8 @@
       "avg_price": 96,
       "rating": 4.6,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "辣",
         "火锅",
@@ -303,6 +329,8 @@
       "avg_price": 108,
       "rating": 4.2,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "辣",
         "火锅",
@@ -325,6 +353,8 @@
       "avg_price": 68,
       "rating": 4.3,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "辣",
         "火锅",
@@ -347,6 +377,8 @@
       "avg_price": 42,
       "rating": 3.9,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "辣",
         "火锅"
@@ -368,6 +400,8 @@
       "avg_price": 54,
       "rating": 4.4,
       "category": "川菜",
+      "cuisine": "川湘辣菜",
+      "delivery": true,
       "tags": [
         "辣",
         "川菜",
@@ -390,6 +424,8 @@
       "avg_price": 22,
       "rating": 4.2,
       "category": "粉面",
+      "cuisine": "面食粉面",
+      "delivery": true,
       "tags": [
         "不辣",
         "粉",
@@ -412,6 +448,8 @@
       "avg_price": 20,
       "rating": 4.1,
       "category": "小吃",
+      "cuisine": "小吃早餐",
+      "delivery": true,
       "tags": [
         "不辣",
         "小吃",
@@ -434,6 +472,8 @@
       "avg_price": 23,
       "rating": 4.0,
       "category": "快餐",
+      "cuisine": "快餐简餐",
+      "delivery": true,
       "tags": [
         "不辣",
         "饭",
@@ -456,6 +496,8 @@
       "avg_price": 59,
       "rating": 4.1,
       "category": "夜宵",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "夜宵",
@@ -478,6 +520,8 @@
       "avg_price": 26,
       "rating": 4.3,
       "category": "米粉",
+      "cuisine": "面食粉面",
+      "delivery": true,
       "tags": [
         "辣",
         "粉",
@@ -500,6 +544,8 @@
       "avg_price": 25,
       "rating": 4.1,
       "category": "麻辣烫",
+      "cuisine": "快餐简餐",
+      "delivery": true,
       "tags": [
         "辣",
         "麻辣烫"
@@ -521,6 +567,8 @@
       "avg_price": 27,
       "rating": 3.9,
       "category": "串串",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "辣",
         "串串"
@@ -542,6 +590,8 @@
       "avg_price": 29,
       "rating": 4.0,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烧烤",
@@ -564,6 +614,8 @@
       "avg_price": 63,
       "rating": 4.3,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烧烤",
@@ -586,6 +638,8 @@
       "avg_price": 38,
       "rating": 3.7,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烧烤",
@@ -608,6 +662,8 @@
       "avg_price": 66,
       "rating": 4.2,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "微辣",
         "火锅",
@@ -630,6 +686,8 @@
       "avg_price": 80,
       "rating": 4.5,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "微辣",
         "火锅",
@@ -652,6 +710,8 @@
       "avg_price": 66,
       "rating": 4.3,
       "category": "新疆菜",
+      "cuisine": "川湘辣菜",
+      "delivery": true,
       "tags": [
         "辣",
         "烧烤",
@@ -674,6 +734,8 @@
       "avg_price": 19,
       "rating": 4.1,
       "category": "湘菜",
+      "cuisine": "川湘辣菜",
+      "delivery": true,
       "tags": [
         "辣",
         "饭",
@@ -696,6 +758,8 @@
       "avg_price": 39,
       "rating": 4.2,
       "category": "江西菜",
+      "cuisine": "川湘辣菜",
+      "delivery": true,
       "tags": [
         "辣",
         "饭",
@@ -718,6 +782,8 @@
       "avg_price": 29,
       "rating": 4.5,
       "category": "甜点",
+      "cuisine": "甜点烘焙",
+      "delivery": true,
       "tags": [
         "甜",
         "甜点"
@@ -739,6 +805,8 @@
       "avg_price": 37,
       "rating": 4.2,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡"
@@ -760,6 +828,8 @@
       "avg_price": 77,
       "rating": 4.3,
       "category": "日料",
+      "cuisine": "西餐日韩",
+      "delivery": true,
       "tags": [
         "不辣",
         "日料",
@@ -782,6 +852,8 @@
       "avg_price": 14,
       "rating": 4.0,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -803,6 +875,8 @@
       "avg_price": 10,
       "rating": 4.3,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -824,6 +898,8 @@
       "avg_price": 30,
       "rating": 4.3,
       "category": "甜点",
+      "cuisine": "甜点烘焙",
+      "delivery": true,
       "tags": [
         "甜",
         "甜点"
@@ -845,6 +921,8 @@
       "avg_price": 12,
       "rating": 3.7,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡"
@@ -866,6 +944,8 @@
       "avg_price": 19,
       "rating": 4.2,
       "category": "甜点",
+      "cuisine": "甜点烘焙",
+      "delivery": true,
       "tags": [
         "甜",
         "甜点"
@@ -887,6 +967,8 @@
       "avg_price": 10,
       "rating": 4.2,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -908,6 +990,8 @@
       "avg_price": 15,
       "rating": 4.1,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -929,6 +1013,8 @@
       "avg_price": 137,
       "rating": 4.8,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "辣",
         "火锅",
@@ -951,6 +1037,8 @@
       "avg_price": 66,
       "rating": 4.3,
       "category": "西餐",
+      "cuisine": "西餐日韩",
+      "delivery": true,
       "tags": [
         "不辣",
         "西餐",
@@ -973,6 +1061,8 @@
       "avg_price": 17,
       "rating": 4.3,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -994,6 +1084,8 @@
       "avg_price": 16,
       "rating": 4.3,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -1015,6 +1107,8 @@
       "avg_price": 11,
       "rating": 4.3,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡"
@@ -1036,6 +1130,8 @@
       "avg_price": 46,
       "rating": 4.3,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡"
@@ -1057,6 +1153,8 @@
       "avg_price": 12,
       "rating": 3.7,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡"
@@ -1078,6 +1176,8 @@
       "avg_price": 13,
       "rating": 4.1,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡"
@@ -1099,6 +1199,8 @@
       "avg_price": 81,
       "rating": 4.4,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烧烤",
@@ -1121,6 +1223,8 @@
       "avg_price": 120,
       "rating": 4.3,
       "category": "海鲜",
+      "cuisine": "川湘辣菜",
+      "delivery": true,
       "tags": [
         "辣",
         "聚餐"
@@ -1142,6 +1246,8 @@
       "avg_price": 42,
       "rating": 4.4,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烧烤",
@@ -1164,6 +1270,8 @@
       "avg_price": 73,
       "rating": 4.1,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烧烤",
@@ -1186,6 +1294,8 @@
       "avg_price": 73,
       "rating": 4.1,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烧烤",
@@ -1208,6 +1318,8 @@
       "avg_price": 61,
       "rating": 4.0,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "不辣",
         "火锅",
@@ -1230,6 +1342,8 @@
       "avg_price": 70,
       "rating": 4.6,
       "category": "贵州菜",
+      "cuisine": "川湘辣菜",
+      "delivery": true,
       "tags": [
         "辣",
         "聚餐"
@@ -1251,6 +1365,8 @@
       "avg_price": 70,
       "rating": 4.6,
       "category": "东北菜",
+      "cuisine": "家常小炒",
+      "delivery": true,
       "tags": [
         "微辣",
         "聚餐"
@@ -1272,6 +1388,8 @@
       "avg_price": 74,
       "rating": 4.8,
       "category": "韩餐",
+      "cuisine": "西餐日韩",
+      "delivery": true,
       "tags": [
         "微辣",
         "饭"
@@ -1293,6 +1411,8 @@
       "avg_price": 75,
       "rating": 4.5,
       "category": "中餐",
+      "cuisine": "家常小炒",
+      "delivery": true,
       "tags": [
         "不辣",
         "聚餐"
@@ -1314,6 +1434,8 @@
       "avg_price": 86,
       "rating": 4.8,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烧烤",
@@ -1336,6 +1458,8 @@
       "avg_price": 134,
       "rating": 4.6,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烤肉",
@@ -1358,6 +1482,8 @@
       "avg_price": 98,
       "rating": 4.6,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "辣",
         "火锅",
@@ -1380,6 +1506,8 @@
       "avg_price": 143,
       "rating": 4.6,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "不辣",
         "火锅",
@@ -1402,6 +1530,8 @@
       "avg_price": 88,
       "rating": 4.6,
       "category": "煲类",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "微辣",
         "煲",
@@ -1424,6 +1554,8 @@
       "avg_price": 115,
       "rating": 4.6,
       "category": "煲类",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "微辣",
         "煲",
@@ -1446,6 +1578,8 @@
       "avg_price": 80,
       "rating": 4.3,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "不辣",
         "火锅",
@@ -1468,6 +1602,8 @@
       "avg_price": 63,
       "rating": 4.2,
       "category": "火锅",
+      "cuisine": "火锅",
+      "delivery": false,
       "tags": [
         "辣",
         "火锅",
@@ -1490,6 +1626,8 @@
       "avg_price": 67,
       "rating": 4.3,
       "category": "江浙菜",
+      "cuisine": "家常小炒",
+      "delivery": true,
       "tags": [
         "不辣",
         "聚餐"
@@ -1511,6 +1649,8 @@
       "avg_price": 45,
       "rating": 4.6,
       "category": "甜点",
+      "cuisine": "甜点烘焙",
+      "delivery": true,
       "tags": [
         "甜",
         "甜点"
@@ -1532,6 +1672,8 @@
       "avg_price": 30,
       "rating": 4.3,
       "category": "面包甜点",
+      "cuisine": "甜点烘焙",
+      "delivery": true,
       "tags": [
         "甜",
         "面包"
@@ -1553,6 +1695,8 @@
       "avg_price": 27,
       "rating": 4.2,
       "category": "面包甜点",
+      "cuisine": "甜点烘焙",
+      "delivery": true,
       "tags": [
         "甜",
         "面包"
@@ -1574,6 +1718,8 @@
       "avg_price": 34,
       "rating": 4.0,
       "category": "甜点",
+      "cuisine": "甜点烘焙",
+      "delivery": true,
       "tags": [
         "甜",
         "甜点"
@@ -1595,6 +1741,8 @@
       "avg_price": 18,
       "rating": 4.3,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -1616,6 +1764,8 @@
       "avg_price": 21,
       "rating": 4.1,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -1637,6 +1787,8 @@
       "avg_price": 18,
       "rating": 4.1,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -1658,6 +1810,8 @@
       "avg_price": 16,
       "rating": 4.1,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -1679,6 +1833,8 @@
       "avg_price": 8,
       "rating": 4.3,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -1700,6 +1856,8 @@
       "avg_price": 23,
       "rating": 4.2,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -1721,6 +1879,8 @@
       "avg_price": 18,
       "rating": 4.1,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -1742,6 +1902,8 @@
       "avg_price": 32,
       "rating": 4.3,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡"
@@ -1763,6 +1925,8 @@
       "avg_price": 35,
       "rating": 4.3,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡"
@@ -1784,6 +1948,8 @@
       "avg_price": 12,
       "rating": 4.3,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡"
@@ -1805,6 +1971,8 @@
       "avg_price": 20,
       "rating": 4.0,
       "category": "小吃",
+      "cuisine": "小吃早餐",
+      "delivery": true,
       "tags": [
         "不辣",
         "小吃",
@@ -1827,6 +1995,8 @@
       "avg_price": 24,
       "rating": 4.2,
       "category": "米粉",
+      "cuisine": "面食粉面",
+      "delivery": true,
       "tags": [
         "微辣",
         "粉",
@@ -1849,6 +2019,8 @@
       "avg_price": 26,
       "rating": 4.1,
       "category": "面食",
+      "cuisine": "面食粉面",
+      "delivery": true,
       "tags": [
         "不辣",
         "面"
@@ -1870,6 +2042,8 @@
       "avg_price": 10,
       "rating": 4.0,
       "category": "早餐",
+      "cuisine": "小吃早餐",
+      "delivery": true,
       "tags": [
         "不辣",
         "早餐",
@@ -1892,6 +2066,8 @@
       "avg_price": 22,
       "rating": 4.3,
       "category": "面食",
+      "cuisine": "面食粉面",
+      "delivery": true,
       "tags": [
         "辣",
         "面"
@@ -1913,6 +2089,8 @@
       "avg_price": 5,
       "rating": 3.7,
       "category": "小吃",
+      "cuisine": "小吃早餐",
+      "delivery": true,
       "tags": [
         "不辣",
         "小吃",
@@ -1935,6 +2113,8 @@
       "avg_price": 22,
       "rating": 4.1,
       "category": "汤",
+      "cuisine": "小吃早餐",
+      "delivery": true,
       "tags": [
         "不辣",
         "汤",
@@ -1957,6 +2137,8 @@
       "avg_price": 30,
       "rating": 4.0,
       "category": "面食",
+      "cuisine": "面食粉面",
+      "delivery": true,
       "tags": [
         "辣",
         "面"
@@ -1978,6 +2160,8 @@
       "avg_price": 21,
       "rating": 4.2,
       "category": "快餐",
+      "cuisine": "快餐简餐",
+      "delivery": true,
       "tags": [
         "辣",
         "快餐"
@@ -1999,6 +2183,8 @@
       "avg_price": 20,
       "rating": 4.2,
       "category": "快餐",
+      "cuisine": "快餐简餐",
+      "delivery": true,
       "tags": [
         "微辣",
         "饭",
@@ -2021,6 +2207,8 @@
       "avg_price": 22,
       "rating": 3.8,
       "category": "小吃",
+      "cuisine": "小吃早餐",
+      "delivery": true,
       "tags": [
         "不辣",
         "小吃",
@@ -2043,6 +2231,8 @@
       "avg_price": 142,
       "rating": 3.9,
       "category": "川菜",
+      "cuisine": "川湘辣菜",
+      "delivery": true,
       "tags": [
         "辣",
         "聚餐"
@@ -2064,6 +2254,8 @@
       "avg_price": 44,
       "rating": 4.0,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烧烤",
@@ -2086,6 +2278,8 @@
       "avg_price": 122,
       "rating": 4.3,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烧烤",
@@ -2108,6 +2302,8 @@
       "avg_price": 7,
       "rating": 4.3,
       "category": "奶茶",
+      "cuisine": "奶茶",
+      "delivery": true,
       "tags": [
         "甜",
         "奶茶"
@@ -2129,6 +2325,8 @@
       "avg_price": 13,
       "rating": 4.2,
       "category": "快餐",
+      "cuisine": "快餐简餐",
+      "delivery": true,
       "tags": [
         "微辣",
         "饭"
@@ -2150,6 +2348,8 @@
       "avg_price": 35,
       "rating": 4.0,
       "category": "卤味",
+      "cuisine": "小吃早餐",
+      "delivery": true,
       "tags": [
         "不辣",
         "卤味"
@@ -2171,6 +2371,8 @@
       "avg_price": 18,
       "rating": 4.0,
       "category": "汤",
+      "cuisine": "小吃早餐",
+      "delivery": true,
       "tags": [
         "不辣",
         "汤"
@@ -2192,6 +2394,8 @@
       "avg_price": 17,
       "rating": 4.1,
       "category": "快餐",
+      "cuisine": "快餐简餐",
+      "delivery": true,
       "tags": [
         "辣",
         "快餐"
@@ -2213,6 +2417,8 @@
       "avg_price": 9,
       "rating": 4.0,
       "category": "快餐",
+      "cuisine": "快餐简餐",
+      "delivery": true,
       "tags": [
         "不辣",
         "饭"
@@ -2234,6 +2440,8 @@
       "avg_price": 60,
       "rating": 4.0,
       "category": "烤鱼",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烤鱼",
@@ -2256,6 +2464,8 @@
       "avg_price": 87,
       "rating": 4.1,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烧烤",
@@ -2278,6 +2488,8 @@
       "avg_price": 70,
       "rating": 4.0,
       "category": "烧烤",
+      "cuisine": "烧烤烤肉",
+      "delivery": false,
       "tags": [
         "辣",
         "烧烤",
@@ -2300,6 +2512,8 @@
       "avg_price": 27,
       "rating": 4.4,
       "category": "江西菜",
+      "cuisine": "川湘辣菜",
+      "delivery": true,
       "tags": [
         "辣",
         "饭"
@@ -2321,6 +2535,8 @@
       "avg_price": 29,
       "rating": 4.2,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡"
@@ -2342,6 +2558,8 @@
       "avg_price": 11,
       "rating": 4.3,
       "category": "咖啡",
+      "cuisine": "咖啡",
+      "delivery": true,
       "tags": [
         "甜",
         "咖啡"
@@ -2363,6 +2581,8 @@
       "avg_price": 21,
       "rating": 4.1,
       "category": "面包甜点",
+      "cuisine": "甜点烘焙",
+      "delivery": true,
       "tags": [
         "甜",
         "面包"
@@ -2384,6 +2604,8 @@
       "avg_price": 28,
       "rating": 4.1,
       "category": "面包甜点",
+      "cuisine": "甜点烘焙",
+      "delivery": true,
       "tags": [
         "甜",
         "面包"

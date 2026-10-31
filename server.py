@@ -41,6 +41,7 @@ DEMO_STEPS = [
     {"key": "meal", "label": "餐别=正餐"},
     {"key": "where", "label": "场景=食堂"},
     {"key": "spice", "label": "口味=辣"},
+    {"key": "cuisine", "label": "菜系=按分布选一类"},
     {"key": "spin", "label": "抽中 A"},
     {"key": "reject", "label": "拒绝 A"},
     {"key": "spin2", "label": "重抽 B"},
@@ -62,7 +63,9 @@ class Session:
         self.wheel = None
         self.meal_type = ""          # meal / dessert
         self.meal_label = ""
-        self.choices = {}            # meal / where / spice / dish
+        self.choices = {}            # meal / where / spice / cuisine / dish
+        # 哪几层是用户主动选「随便」的。前三层全随便 → 菜系层解锁隐藏款「重口猎奇」
+        self.rnd = {"meal": False, "where": False, "spice": False}
         self.budget = "不限"
         self.rejected = []           # [(scene, key)]
         self.card = None
@@ -81,12 +84,13 @@ class Session:
             return None
         scene, opts = w.get("scene", ""), w.get("options", [])
         probs = self.engine.probabilities(scene, opts) if opts else {}
+        counts = w.get("counts") or {}
         return {
             "scene": scene,
             "title": w.get("title", ""),
             "ctx": w.get("ctx", ""),
             "step": self.step,
-            "options": [{"key": o, "prob": probs.get(o, 0.0)} for o in opts],
+            "options": [{"key": o, "prob": probs.get(o, 0.0), "count": counts.get(o)} for o in opts],
             "items": w.get("items", []),
             "skip": w.get("skip"),
             "note": w.get("note", ""),
@@ -97,6 +101,10 @@ class Session:
             "mealLabel": self.meal_label,
         }
 
+    def all_random(self):
+        """前三层是不是都交给了命运。隐藏款的解锁条件。"""
+        return all(self.rnd.get(k) for k in ("meal", "where", "spice"))
+
     def reset(self):
         self.history = []
         self.engine = WheelEngine()
@@ -104,6 +112,7 @@ class Session:
         self.meal_type = ""
         self.meal_label = ""
         self.choices = {}
+        self.rnd = {"meal": False, "where": False, "spice": False}
         self.rejected = []
         self.card = None
         self.four = None
@@ -151,6 +160,8 @@ def _wheel(scene, preference="", layer="", source="orchestrator"):
     payload, _ = _call("build_wheel", {
         "scene": scene, "preference": preference, "budget": budget,
         "meal_type": SESS.meal_type, "where": SESS.choices.get("where", ""),
+        "cuisine": SESS.choices.get("cuisine", ""),
+        "unlock_low": SESS.all_random(),
     }, layer=layer or scene, source=source)
     if not payload or payload.get("error"):
         return None
@@ -160,6 +171,27 @@ def _wheel(scene, preference="", layer="", source="orchestrator"):
 
 
 # ------------------------- 动作 -------------------------
+def _go_cuisine(preference):
+    """进菜系层；若只剩一类（或者根本没有分组），别再让用户白点一下，直接进菜品。"""
+    _wheel("cuisine", preference=preference, layer="cuisine")
+    opts = (SESS.wheel or {}).get("options") or []
+    if not opts:
+        _wheel("dish", preference=preference, layer="dish")
+        return {"wheel": SESS.wheel_view()}
+    if len(opts) == 1:
+        log(f"[SKIP] 菜系层只剩「{opts[0]}」，自动进入菜品层")
+        return act_accept(opts[0])
+    counts = (SESS.wheel or {}).get("counts") or {}
+    real = [o for o in opts if o != tools.CUISINE_LOW]
+    total = sum(v for k, v in counts.items() if k != tools.CUISINE_LOW)
+    if total <= 6:
+        # 池子就这么几个东西，再分菜系纯属折腾，直接摆菜品
+        log(f"[SKIP] 菜系分组太小（{total} 个候选分 {len(real)} 类），直接进入菜品层")
+        _wheel("dish", preference=preference, layer="dish")
+        return {"wheel": SESS.wheel_view()}
+    return {"wheel": SESS.wheel_view()}
+
+
 def act_build_meal():
     if _wheel("meal"):
         return {"wheel": SESS.wheel_view()}
@@ -199,10 +231,16 @@ def act_reject(key):
     if not opts:
         SESS.wheel = None
         return {"wheel": None, "note": "所有选项都被你拒了，换个说法我再给你来一轮。"}
+    note = f"「{key}」已剔除，权重清零，概率已重排。"
+    if scene == "where":
+        # 「随便」= 场景不限。真选项被拒到只剩一个时，它等于那个选项，自动撤下
+        real = [o for o in opts if o != "随便"]
+        if "随便" in opts and len(real) <= 1:
+            opts = [o for o in opts if o != "随便"]
+            note += "「随便」也自动撤下了——只剩一个场景可选时它就等于那个选项，没意义。"
     w["options"] = opts
     if scene == "dish":
         w["items"] = [i for i in w.get("items", []) if i.get("name") != key]
-    note = f"「{key}」已剔除，权重清零，概率已重排。"
     if scene != "dish" and len(opts) == 1:
         note += f" 只剩「{opts[0]}」了，这层没得选，直接定就行。"
     return {"wheel": SESS.wheel_view(), "note": note}
@@ -217,6 +255,7 @@ def act_accept(key):
 
     if scene == "meal":
         if key == "随便":
+            SESS.rnd["meal"] = True
             key = random.choice(["正餐", "甜品饮料"])
             log(f"[MEAL] 选“随便”→ 各 50% roll 出 {key}")
         SESS.meal_type = "dessert" if key == "甜品饮料" else "meal"
@@ -227,14 +266,32 @@ def act_accept(key):
 
     if scene == "where":
         SESS.choices["where"] = key
+        if key == "随便":
+            SESS.rnd["where"] = True
+        SESS.choices.pop("cuisine", None)      # 换了场景，菜系要重新算
+        if SESS.meal_type == "dessert":
+            # 奶茶咖啡没有辣不辣，口味这层直接跳过
+            SESS.choices["spice"] = "随便"
+            SESS.rnd["spice"] = True       # 没有这一层，等于也交给了命运
+            log("[SKIP] 甜品饮料不需要口味层，直接进菜系")
+            return _go_cuisine("随便")
         _wheel("spice", preference=key, layer="spice")
         return {"wheel": SESS.wheel_view(), "accepted": key}
 
     if scene == "spice":
         SESS.choices["spice"] = key
-        _wheel("dish", preference=key, layer="dish")
+        if key == "随便":
+            SESS.rnd["spice"] = True
+        return _go_cuisine(key)
+
+    if scene == "cuisine":
+        if key not in (w.get("options") or []):
+            log(f"[GUARD] 菜系层没有「{key}」这个选项，重开菜系层")
+            return _go_cuisine(SESS.choices.get("spice", ""))
+        SESS.choices["cuisine"] = key
+        _wheel("dish", preference=SESS.choices.get("spice", ""), layer="dish")
         if not SESS.wheel or not SESS.wheel.get("options"):
-            return {"wheel": None, "note": "这一层没筛出菜，我放宽条件重来。"}
+            return {"wheel": None, "note": "这一类没筛出菜，我放宽条件重来。"}
         return {"wheel": SESS.wheel_view(), "accepted": key}
 
     # dish 层：定菜
@@ -262,7 +319,8 @@ def act_four(picked_id=None):
     """四条并列推荐：用当前筛选条件下的真实候选池计算。"""
     pool = build_pool(meal_type=SESS.meal_type, spice=SESS.choices.get("spice", ""),
                       budget=None if SESS.budget in ("不限", "", None) else SESS.budget,
-                      where=SESS.choices.get("where", ""))
+                      where=SESS.choices.get("where", ""),
+                      cuisine=SESS.choices.get("cuisine", ""))
     payload, _ = _call("finalize", {"candidates_list": pool, "picked_id": picked_id}, layer="four")
     if not payload:
         payload = json.loads(tools.finalize(pool, picked_id=picked_id))
@@ -531,6 +589,9 @@ def act_demo_next():
             payload = act_accept("食堂")
         elif key == "spice":
             payload = act_accept("辣")
+        elif key == "cuisine":
+            opts = (SESS.wheel or {}).get("options") or []
+            payload = act_accept(opts[0]) if opts else {}
         elif key == "spin":
             payload = act_spin()
             SESS.demo_a = (payload.get("wheel") or {}).get("picked")

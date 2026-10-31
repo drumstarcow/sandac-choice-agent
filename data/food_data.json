@@ -63,6 +63,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "时令青菜，油不多",
       "img": ""
     },
@@ -78,6 +79,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "一块钱一份，解腻",
       "img": ""
     },
@@ -93,6 +95,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "也是一块钱档位",
       "img": ""
     },
@@ -108,6 +111,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "麻婆豆腐的食堂版，下饭",
       "img": ""
     },
@@ -123,6 +127,7 @@
         "汤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "红汤鸭血，微辣",
       "img": ""
     },
@@ -138,6 +143,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "酸辣开胃，学生常点",
       "img": ""
     },
@@ -153,6 +159,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "清淡",
       "img": ""
     },
@@ -168,6 +175,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "卤过的豆制品",
       "img": ""
     },
@@ -183,6 +191,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "清爽",
       "img": ""
     },
@@ -198,6 +207,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "偏甜口",
       "img": ""
     },
@@ -213,6 +223,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "凉拌",
       "img": ""
     },
@@ -228,6 +239,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "凉拌海带",
       "img": ""
     },
@@ -243,6 +255,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "用肉汁煨的萝卜",
       "img": ""
     },
@@ -258,6 +271,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "滑溜的粉皮",
       "img": ""
     },
@@ -273,6 +287,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "麻酱腐竹配肉沫",
       "img": ""
     },
@@ -288,6 +303,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "家常烧法",
       "img": ""
     },
@@ -303,6 +319,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "玉米青豆胡萝卜",
       "img": ""
     },
@@ -318,6 +335,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "土豆烧刀豆",
       "img": ""
     },
@@ -333,6 +351,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "菌菇配肉片",
       "img": ""
     },
@@ -348,6 +367,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "清淡小炒",
       "img": ""
     },
@@ -363,6 +383,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "家常",
       "img": ""
     },
@@ -378,6 +399,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "鸡蛋给得实在",
       "img": ""
     },
@@ -393,6 +415,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "木耳脆",
       "img": ""
     },
@@ -408,6 +431,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "夏天常点",
       "img": ""
     },
@@ -423,6 +447,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "粉丝吸汁",
       "img": ""
     },
@@ -438,6 +463,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "平菇鲜",
       "img": ""
     },
@@ -453,6 +479,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "食堂招牌，三块五一块大排",
       "img": ""
     },
@@ -468,6 +495,7 @@
         "素"
       ],
       "meal_type": "meal",
+      "cuisine": "清淡素菜",
       "desc": "当季才有",
       "img": ""
     },
@@ -483,6 +511,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "油豆腐吸满汤汁",
       "img": ""
     },
@@ -498,6 +527,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "带点辣味",
       "img": ""
     },
@@ -513,6 +543,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "下饭",
       "img": ""
     },
@@ -528,6 +559,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "干锅花菜的做法",
       "img": ""
     },
@@ -543,6 +575,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "芹菜脆",
       "img": ""
     },
@@ -558,6 +591,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "家常三样",
       "img": ""
     },
@@ -573,6 +607,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "千张有嚼头",
       "img": ""
     },
@@ -588,6 +623,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "家常小炒",
       "desc": "毛豆当季最香",
       "img": ""
     },
@@ -603,6 +639,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "两个一份",
       "img": ""
     },
@@ -618,6 +655,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "现炸，微辣",
       "img": ""
     },
@@ -633,6 +671,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "外脆里嫩",
       "img": ""
     },
@@ -648,6 +687,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "两个一份，汤汁鲜",
       "img": ""
     },
@@ -663,6 +703,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "咖喱味浓，拌饭好",
       "img": ""
     },
@@ -678,6 +719,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "两个一份",
       "img": ""
     },
@@ -693,6 +735,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "经典菜，配米饭刚好",
       "img": ""
     },
@@ -708,6 +751,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "蒸出来的，嫩",
       "img": ""
     },
@@ -723,6 +767,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "酸甜带辣",
       "img": ""
     },
@@ -738,6 +783,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "五块钱一个鸡腿",
       "img": ""
     },
@@ -753,6 +799,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "土豆软烂",
       "img": ""
     },
@@ -768,6 +815,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "两个一份",
       "img": ""
     },
@@ -783,6 +831,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "现炒，锅气足",
       "img": ""
     },
@@ -798,6 +847,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "蒜味重",
       "img": ""
     },
@@ -813,6 +863,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "酸甜口，学生爱点",
       "img": ""
     },
@@ -828,6 +879,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "外酥里嫩",
       "img": ""
     },
@@ -843,6 +895,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "现炸椒盐",
       "img": ""
     },
@@ -858,6 +911,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "酸辣开胃",
       "img": ""
     },
@@ -873,6 +927,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "梅干菜吸油",
       "img": ""
     },
@@ -888,6 +943,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "百叶结入味",
       "img": ""
     },
@@ -903,6 +959,7 @@
         "荤"
       ],
       "meal_type": "meal",
+      "cuisine": "风味小炒",
       "desc": "猪肝嫩",
       "img": ""
     },
@@ -918,6 +975,7 @@
         "麻辣烫"
       ],
       "meal_type": "meal",
+      "cuisine": "快餐简餐",
       "desc": "自己夹菜，按重量算",
       "img": ""
     },
@@ -933,6 +991,7 @@
         "饭"
       ],
       "meal_type": "meal",
+      "cuisine": "快餐简餐",
       "desc": "铁板现炒，粒粒分明",
       "img": ""
     },
@@ -948,6 +1007,7 @@
         "面"
       ],
       "meal_type": "meal",
+      "cuisine": "面食粉面",
       "desc": "山西师傅现削",
       "img": ""
     },
@@ -963,6 +1023,7 @@
         "面"
       ],
       "meal_type": "meal",
+      "cuisine": "小吃早餐",
       "desc": "花生酱拌面，配扁肉更香",
       "img": ""
     },
@@ -978,6 +1039,7 @@
         "小吃"
       ],
       "meal_type": "meal",
+      "cuisine": "小吃早餐",
       "desc": "小馄饨，皮薄",
       "img": ""
     },
@@ -994,6 +1056,7 @@
         "饭"
       ],
       "meal_type": "meal",
+      "cuisine": "快餐简餐",
       "desc": "按份打菜，结账自动识别",
       "img": ""
     }

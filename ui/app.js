@@ -58,7 +58,8 @@ function addWelcome() {  const box = el('div', 'welcome');
   box.innerHTML = `
     <div class="w-title">它能干什么</div>
     <ul>
-      <li><b>四层转盘</b>：餐别 → 场景 → 口味 → 菜品，概率是真的，拒绝后真的重排</li>
+      <li><b>五层转盘</b>：餐别 → 场景 → 口味 → 菜系 → 菜品，概率是真的，拒绝后真的重排</li>
+      <li><b>菜系细分</b>：火锅 / 烧烤 / 川湘辣菜 / 面食 / 快餐…按真实分布分组，另设「重口猎奇区」收录评分垫底的几道</li>
       <li><b>点名直达</b>：说「想吃火锅」就不转盘，直接给四条并排方案</li>
       <li><b>四条并列</b>：综合最佳 / 最近 / 最便宜 / 评分最高，同一个不重复上屏</li>
       <li><b>记得你</b>：偏好写进画像，下次按你的口味和预算预过滤</li>
@@ -145,7 +146,7 @@ function renderStage() {
 
   const w = st.wheel;
   if (w && w.scene === 'dish') return renderGrid(stage, st);
-  if (w && ['meal', 'where', 'spice'].includes(w.scene)) return renderWheel(stage, st);
+  if (w && ['meal', 'where', 'spice', 'cuisine'].includes(w.scene)) return renderWheel(stage, st);
   if (st.step === 'card' && st.card) return renderCard(stage, st);
   if (st.four && (st.four.groups || []).length) return renderFourStage(stage, st);
 
@@ -154,7 +155,7 @@ function renderStage() {
   hero.innerHTML = `
     <div class="big">🍱</div>
     <h2>今天这顿，交给它决定</h2>
-    <p>四层转盘：餐别 → 场景 → 口味 → 菜品。概率是真的，拒绝之后真的会重排。</p>
+    <p>五层转盘：餐别 → 场景 → 口味 → 菜系 → 菜品。概率是真的，拒绝之后真的会重排。</p>
     <div class="row">
       <button class="btn primary" id="go">开始转盘</button>
       <button class="btn ghost" id="demo2">▶ 一键演示整场</button>
@@ -171,7 +172,8 @@ function crumbs(st) {
   const items = [
     ['餐别', st.mealLabel || c.meal],
     ['场景', c.where],
-    ['口味', c.spice === '随便' ? '随便（不过滤）' : c.spice],
+    ['口味', c.spice === '随便' ? '不过滤' : c.spice],
+    ['菜系', c.cuisine],
     ['菜品', c.dish],
   ];
   items.forEach(([k, v]) => {
@@ -188,6 +190,8 @@ function renderWheel(stage, st) {
   if (!w) return renderStage();
   stage.appendChild(el('h2', 'stage-title', esc(w.title)));
   if (w.ctx) stage.appendChild(el('p', 'stage-sub', '上一层：' + esc(w.ctx)));
+  // 菜系层的说明（分组数、隐藏款是否解锁）要显示出来，不然解锁了也没人知道
+  if (w.note) stage.appendChild(el('p', 'stage-sub', esc(w.note)));
 
   const wrap = el('div', 'wheel-wrap');
   const box = el('div', 'wheel-box');
@@ -201,8 +205,9 @@ function renderWheel(stage, st) {
   const legend = el('div', 'prob-legend');
   w.options.forEach((o, i) => {
     const dead = o.prob <= 0;
+    const num = (o.count === null || o.count === undefined) ? '' : `<i>${o.count} 个</i>`;
     const p = el('span', 'prob' + (dead ? ' dead' : ''),
-      `<span class="dot" style="background:${COLORS[i % COLORS.length]}"></span>${esc(o.key)} <b>${Math.round(o.prob * 100)}%</b>`);
+      `<span class="dot" style="background:${COLORS[i % COLORS.length]}"></span>${esc(o.key)}${num} <b>${Math.round(o.prob * 100)}%</b>`);
     legend.appendChild(p);
   });
   // 被拒绝过的项：红灰色 + 删除线，永久剔出本会话（权重清零）
@@ -356,10 +361,12 @@ function drawWheel(canvas, opts, rot, sel) {
     ctx.rotate(mid + (Math.cos(mid) < 0 ? Math.PI : 0));
     ctx.textAlign = 'center';
     ctx.fillStyle = '#fff';
-    ctx.font = '700 15px "PingFang SC","Microsoft YaHei",sans-serif';
-    ctx.fillText(o.key, 0, -7);
-    ctx.font = '600 12px ui-monospace,Consolas,monospace';
-    ctx.fillText(Math.round(o.prob * 100) + '%', 0, 12);
+    // 扇区越多字越小，否则 10 个以上会压到扇区边上
+    const fs = n >= 10 ? 12 : n >= 8 ? 13 : 15;
+    ctx.font = `700 ${fs}px "PingFang SC","Microsoft YaHei",sans-serif`;
+    ctx.fillText(o.key, 0, -fs * 0.45);
+    ctx.font = `600 ${Math.max(10, fs - 3)}px ui-monospace,Consolas,monospace`;
+    ctx.fillText(Math.round(o.prob * 100) + '%', 0, fs * 0.8);
     ctx.restore();
   });
 
@@ -426,11 +433,17 @@ function renderGrid(stage, st) {
   stage.appendChild(bar);
 
   const grid = el('div', 'grid');
+  // 同名菜（三家「烤串」）光看菜名分不清，只有重名时才补店名；
+  // 食堂一整个窗口 8 道菜都写「第二食堂·风味窗口」纯属噪音，不显示。
+  const dup = {};
+  items.forEach(it => { dup[it.name] = (dup[it.name] || 0) + 1; });
   items.forEach((it, i) => {
+    const shop = dup[it.name] > 1 ? shopShort(it.shop) : '';
     const c = el('div', 'cell',
-      `<img src="${esc(it.img || '/plate/' + it.id + '.svg')}" alt="${esc(it.name)}" loading="lazy">
+      `<img src="${esc(it.img || '/plate/' + it.id + '.svg')}" alt="${esc(it.name)}" loading="eager">
        <div class="cell-meta"><span class="cell-name">${esc(it.name)}</span>
-       <span class="cell-price">¥${it.price}</span></div>`);
+       <span class="cell-price">¥${it.price}</span>
+       ${shop ? `<span class="cell-shop">${esc(shop)}</span>` : ''}</div>`);
     c.dataset.i = i;
     grid.appendChild(c);
   });
@@ -470,12 +483,17 @@ function renderGrid(stage, st) {
   };
 }
 
+function shopShort(name) {
+  return String(name || '').replace(/[（(].*?[）)]/g, '');
+}
+
 /* 格子跳动：80~120ms 起，逐渐减速，约 28 次后停在目标格 */
 async function jumpTo(wv) {
   const cells = [...document.querySelectorAll('.cell')];
   if (!cells.length) return;
   const n = cells.length;
-  const jumps = 28;
+  // 格子越多，跳的圈数越多，否则 20+ 格时看起来只在一个角落打转
+  const jumps = Math.max(28, Math.min(44, n + 12));
   const target = wv.pickedIndex;
   let idx = ((target - jumps) % n + n) % n;
   let delay = 80;
@@ -710,7 +728,7 @@ async function runDemo() {
   btn.textContent = '■ 停止演示';
   btn.onclick = () => { DEMO_STOP = true; };
   let step = 0;
-  const TOTAL = 8;
+  const TOTAL = 9;
   const tell = t => { step += 1; addSys(`[${step}/${TOTAL}] ${t}`); };
 
   try {
@@ -725,7 +743,7 @@ async function runDemo() {
     if (DEMO_STOP) return;
     await demoAccept('正餐'); await sleep(700);
 
-    tell('第 1 层 · 场景：食堂 / 外面吃');
+    tell('第 1 层 · 场景：食堂 / 外面吃 / 外卖 / 随便，四个扇区都带真实候选数');
     await demoTurnTo('食堂'); await sleep(800);
     if (DEMO_STOP) return;
     await demoAccept('食堂'); await sleep(700);
@@ -735,9 +753,20 @@ async function runDemo() {
     if (DEMO_STOP) return;
     await demoAccept('辣'); await sleep(900);
 
+    // 第 3 层：菜系。选项是后端按当前池子的真实分布算出来的，
+    // 末尾那个「重口猎奇」是评分垫底的几道单独成区。
+    const cuOpts = ((STATE.wheel || {}).options || []);
+    const cuKey = (cuOpts[0] || {}).key;
+    if (cuKey) {
+      tell(`第 3 层 · 菜系：分成 ${cuOpts.length} 类，先转「${cuKey}」`);
+      await demoTurnTo(cuKey); await sleep(800);
+      if (DEMO_STOP) return;
+      await demoAccept(cuKey); await sleep(900);
+    }
+
     const st0 = STATE || {};
     const poolN = (st0.wheel && st0.wheel.items || []).length;
-    tell(`第 3 层 · 菜品格子：从 ${poolN || '这'} 道里真随机抽一次，看它逐格跳`);
+    tell(`第 4 层 · 菜品格子：这一小类就 ${poolN || '几'} 道，逐格跳给你看`);
     let s = await API.post('/api/spin');
     if (s.wheel) { await jumpTo(s.wheel); }
     await sleep(1000);

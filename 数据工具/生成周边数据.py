@@ -22,6 +22,72 @@ import os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COLLECTED_AT = "2026-10-31"
 
+# ------------------------- 菜系（cuisine）与外卖能力 -------------------------
+# 菜系是第 3 层转盘的选项：把 170+ 个候选切成每类 20 来个，格子才转得动。
+# 分类原则：按「用户点单时脑子里的说法」分，不按商圈分；食堂炒菜按窗口分两类，
+# 因为第一食堂大众窗口（素菜/家常）和第二食堂风味窗口（炸物/鸡鸭硬菜）本来就是两种吃法。
+CUISINE_ORDER = ["家常小炒", "清淡素菜", "风味小炒", "快餐简餐", "面食粉面", "火锅",
+                 "烧烤烤肉", "川湘辣菜", "西餐日韩", "小吃早餐", "奶茶", "咖啡", "甜点烘焙"]
+
+# 食堂档口 → 菜系
+COUNTER2CUISINE = {
+    "第一食堂·大众窗口": "家常小炒",
+    "第二食堂·风味窗口": "风味小炒",
+    "第二食堂·麻辣烫档口": "快餐简餐",
+    "第二食堂·铁板档口": "快餐简餐",
+    "杉锦苑·面档": "面食粉面",
+    "杉锦苑·沙县档口": "小吃早餐",
+    "杉锦苑·自选窗口": "快餐简餐",
+}
+
+# 店铺 category → 菜系
+CAT2CUISINE = {
+    "火锅": "火锅", "串串": "火锅", "煲类": "火锅",
+    "烧烤": "烧烤烤肉", "烤鱼": "烧烤烤肉", "夜宵": "烧烤烤肉",
+    "川菜": "川湘辣菜", "湘菜": "川湘辣菜", "江西菜": "川湘辣菜",
+    "贵州菜": "川湘辣菜", "新疆菜": "川湘辣菜", "海鲜": "川湘辣菜",
+    "中餐": "家常小炒", "江浙菜": "家常小炒", "东北菜": "家常小炒", "食堂": "家常小炒",
+    "快餐": "快餐简餐", "台湾菜": "快餐简餐", "麻辣烫": "快餐简餐",
+    "面食": "面食粉面", "米粉": "面食粉面", "粉面": "面食粉面",
+    "小吃": "小吃早餐", "早餐": "小吃早餐", "卤味": "小吃早餐",
+    "汤": "小吃早餐", "小吃街": "小吃早餐",
+    "西餐": "西餐日韩", "日料": "西餐日韩", "韩餐": "西餐日韩",
+    "奶茶": "奶茶", "咖啡": "咖啡", "甜点": "甜点烘焙", "面包甜点": "甜点烘焙",
+}
+
+# 个别店的 category 太笼统，单独指定
+NAME2CUISINE = {
+    "辛耕园一楼食堂": "快餐简餐",
+    "辛耕园二楼食堂": "快餐简餐",
+    "辛耕园三楼餐厅": "小吃早餐",
+    "杉锦苑": "家常小炒",
+    "疯狂龙虾馆": "烧烤烤肉",
+}
+
+# 到店现做现吃，不适合外卖（火锅、烧烤）
+NO_DELIVERY = {"火锅", "烧烤烤肉"}
+# 校内食堂窗口不外送（学生吃食堂就是去食堂）
+NO_DELIVERY_NAME = {"辛耕园一楼食堂", "辛耕园二楼食堂", "辛耕园三楼餐厅", "杉锦苑", "杉达黑暗料理街"}
+
+
+def dish_cuisine(shop, tags):
+    """食堂菜按档口归菜系；大众窗口再按荤素拆开（36 道挤在一类里格子转不动）。"""
+    cu = COUNTER2CUISINE.get(shop, "家常小炒")
+    if shop == "第一食堂·大众窗口" and "素" in tags:
+        return "清淡素菜"
+    return cu
+
+
+def shop_cuisine(name, cat):
+    return NAME2CUISINE.get(name) or CAT2CUISINE.get(cat, "家常小炒")
+
+
+def shop_delivery(name, cuisine):
+    if name in NO_DELIVERY_NAME:
+        return False
+    return cuisine not in NO_DELIVERY
+
+
 # ------------------------- 食堂菜品（辛耕园真实价目） -------------------------
 # (菜名, 价格, 窗口, 标签, 描述)  —— 价格与窗口来自校内食堂公开价目表
 CANTEEN = [
@@ -105,6 +171,7 @@ def build_dishes():
             "rating": 4.1 if "荤" in tags else 3.9,
             "tags": tags,
             "meal_type": mt,
+            "cuisine": dish_cuisine(shop, tags),
             "desc": desc,
             "img": "",
         })
@@ -363,6 +430,8 @@ def build_shops():
             "avg_price": price,
             "rating": rating,
             "category": cat,
+            "cuisine": shop_cuisine(name, cat),
+            "delivery": shop_delivery(name, shop_cuisine(name, cat)),
             "tags": tags,
             "meal_type": mt,
             "address": addr,
@@ -413,6 +482,20 @@ def main():
     print("按商圈：", "、".join("%s %d" % (k, v) for k, v in areas.items()))
     far = [s for s in shops if s["distance_km"] > 1.0]
     print("超过 1 公里的：", far if far else "无")
+
+    # 菜系分布（正餐 / 甜品分开看，方便核对每类是否 ≤30）
+    for mt, label in (("meal", "正餐"), ("dessert", "甜品饮料")):
+        cnt = {}
+        for d in dishes:
+            if d["meal_type"] == mt:
+                cnt[d["cuisine"]] = cnt.get(d["cuisine"], 0) + 1
+        for s2 in shops:
+            if s2["meal_type"] == mt:
+                cnt[s2["cuisine"]] = cnt.get(s2["cuisine"], 0) + 1
+        print("  %s菜系：" % label,
+              "、".join("%s %d" % (k, cnt[k]) for k in CUISINE_ORDER if k in cnt))
+    print("  可外卖 %d 家 / 仅堂食 %d 家" % (
+        sum(1 for s2 in shops if s2["delivery"]), sum(1 for s2 in shops if not s2["delivery"])))
 
 
 if __name__ == "__main__":
