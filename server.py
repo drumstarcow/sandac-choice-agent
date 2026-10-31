@@ -88,6 +88,7 @@ class Session:
             "step": self.step,
             "options": [{"key": o, "prob": probs.get(o, 0.0)} for o in opts],
             "items": w.get("items", []),
+            "skip": w.get("skip"),
             "note": w.get("note", ""),
             "rejected": [k for s, k in self.rejected if s == scene],
             "budget": self.budget,
@@ -201,7 +202,10 @@ def act_reject(key):
     w["options"] = opts
     if scene == "dish":
         w["items"] = [i for i in w.get("items", []) if i.get("name") != key]
-    return {"wheel": SESS.wheel_view(), "note": f"「{key}」已剔除，权重清零，概率已重排。"}
+    note = f"「{key}」已剔除，权重清零，概率已重排。"
+    if scene != "dish" and len(opts) == 1:
+        note += f" 只剩「{opts[0]}」了，这层没得选，直接定就行。"
+    return {"wheel": SESS.wheel_view(), "note": note}
 
 
 def act_accept(key):
@@ -602,6 +606,7 @@ def state_payload():
         "recent": recent,
         "history": history_mod.load_history()[-8:],
         "wheel": SESS.wheel_view(),
+        "choices": dict(SESS.choices),
         "card": SESS.card,
         "four": SESS.four,
         "final": SESS.final,

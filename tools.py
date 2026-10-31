@@ -181,7 +181,7 @@ def candidates(meal_type="", spice="", budget=None, where="", keyword=""):
     # 场景
     if where == "食堂":
         out = [c for c in out if c["where"] == "食堂"]
-    elif where == "外面吃":
+    elif where in ("外面吃", "外卖"):   # 口头上说「点外卖」也落在周边店铺这一档
         out = [c for c in out if c["where"] == "外面吃"]
     # 口味
     if spice and spice != "随便":
@@ -215,9 +215,9 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where=""):
     """根据决策层级生成一个转盘配置（真实选项来自数据文件）。
 
     scene:
-      - "meal"  第 0 层：餐别（正餐 / 甜品饮料 / 随便）
-      - "where" 第 1 层：在哪吃（食堂 / 外卖 / 外面吃）
-      - "spice" 第 2 层：口味（辣 / 不辣 / 随便）
+      - "meal"  第 0 层：餐别（正餐 / 甜品饮料，另有盘外「你替我定」）
+      - "where" 第 1 层：在哪吃（食堂 / 外面吃）
+      - "spice" 第 2 层：口味（辣 / 不辣，另有盘外「你替我定」）
       - "dish"  第 3 层：具体菜品（按 餐别+口味+预算 过滤，带 items 供格子渲染）
     preference: 上层已确定的上下文（口味 辣/不辣/随便）
     budget: 金额上限（元），仅 dish 层生效
@@ -228,20 +228,26 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where=""):
     mt = _norm_meal_type(meal_type)
 
     if scene == "meal":
-        options = ["正餐", "甜品饮料", "随便"]
+        # 「随便」不再是扇区：它和真实选项混在一张盘上，一旦拒掉一个，
+        # 剩下的「随便」就等于另一个选项，转盘没有悬念，逻辑上是冗余的。
+        # 改成盘外的一个「你替我定」按钮，扇区只放互斥的真实选项。
+        options = ["正餐", "甜品饮料"]
         title = "🍽️ 这顿想吃什么类型的？"
         ctx = ""
         items = []
+        skip = {"key": "随便", "label": "都行，你替我定"}
     elif scene == "where":
-        options = data.get("where_options", ["食堂", "外卖", "外面吃"])
+        options = data.get("where_options", ["食堂", "外面吃"])
         title = "📍 今天在哪吃？"
         ctx = MEAL_LABELS.get(mt, "")
         items = []
+        skip = None
     elif scene == "spice":
-        options = ["辣", "不辣", "随便"]
+        options = ["辣", "不辣"]
         title = "🌶️ 今天想吃点啥口味？"
         ctx = where
         items = []
+        skip = {"key": "随便", "label": "都行，你替我定"}
     elif scene == "dish":
         pool = candidates(meal_type=mt, spice=preference, budget=budget, where=where)
         note = ""
@@ -259,6 +265,7 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where=""):
                 ordered.append(d)
         options = [d["name"] for d in ordered]
         items = ordered
+        skip = None
         title = "🍽️ 转到哪道菜？（不喜欢就拒绝，剔掉重转）"
         if budget not in (None, "", "不限"):
             title += f"  ｜ 预算≤￥{float(budget):.0f}"
@@ -269,7 +276,7 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where=""):
     payload = {
         "__wheel__": True, "title": title, "scene": scene,
         "options": options, "ctx": ctx, "meal_type": mt,
-        "where": where, "items": items,
+        "where": where, "items": items, "skip": skip,
     }
     if scene == "dish":
         payload["note"] = note
@@ -774,7 +781,7 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "build_wheel",
-            "description": "生成一个“决策大转盘”的配置。scene 为决策层级：meal=第0层(正餐/甜品饮料/随便)；where=第1层(食堂/外卖/外面吃)；spice=第2层(辣/不辣/随便)；dish=第3层(具体菜品，按 preference 口味过滤)。preference 为上层已确定的上下文。选项来自真实数据。",
+            "description": "生成一个“决策大转盘”的配置。scene 为决策层级：meal=第0层(正餐/甜品饮料/随便)；where=第1层(食堂/外面吃)；spice=第2层(辣/不辣/随便)；dish=第3层(具体菜品，按 preference 口味过滤)。preference 为上层已确定的上下文。选项来自真实数据。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -809,7 +816,7 @@ TOOL_SCHEMAS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "where": {"type": "string", "description": "在哪吃：食堂/外卖/外面吃"},
+                    "where": {"type": "string", "description": "在哪吃：食堂/外面吃"},
                     "spice": {"type": "string", "description": "口味：辣/不辣/随便"},
                     "dish": {"type": "string", "description": "最终确定的菜品名"},
                     "note": {"type": "string", "description": "备注，可选"},

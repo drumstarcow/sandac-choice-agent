@@ -34,14 +34,27 @@ async function init() {
   await refresh();
   addSys('我是吃饱饱，今天想好吃啥了不？没想法就把选择权交给命运 🎰');
   addWelcome();
-  // 调试/排练钩子：?auto=demo 自动跑一键演示，?auto=wheel 直接起盘
+  // 调试/排练钩子：?auto=demo 自动跑一键演示，?auto=wheel 直接起盘，
+  // ?auto=card 一路跳到「名片 + 四条」这一屏（答辩排练/排查用，不做动画）
   const auto = new URLSearchParams(location.search).get('auto');
   if (auto === 'demo') runDemo();
   else if (auto === 'wheel') startWheel();
+  else if (auto === 'card') jumpToCard();
 }
 
-function addWelcome() {
-  const box = el('div', 'welcome');
+/* 排练/排查用：不做动画，直接把会话推进到「名片 + 四条」那一屏 */
+async function jumpToCard() {
+  await API.post('/api/reset');
+  await API.post('/api/start');
+  for (const k of ['正餐', '食堂', '辣']) await API.post('/api/accept', { key: k });
+  const r = await API.post('/api/spin');
+  const picked = (r.wheel || {}).picked;
+  if (picked) await API.post('/api/accept', { key: picked });
+  addSys(`已直接跳到「${picked || ''}」的名片 + 四条对比（排练用，未播放动画）`);
+  await refresh();
+}
+
+function addWelcome() {  const box = el('div', 'welcome');
   box.innerHTML = `
     <div class="w-title">它能干什么</div>
     <ul>
@@ -153,7 +166,8 @@ function renderStage() {
 
 function crumbs(st) {
   const box = el('div', 'crumbs');
-  const c = (st.wheel && st.wheel.choices) || {};
+  // 名片/收尾阶段转盘已经销毁，选择记录要从 state.choices 取，否则面包屑会整排变灰
+  const c = st.choices || (st.wheel && st.wheel.choices) || {};
   const items = [
     ['餐别', st.mealLabel || c.meal],
     ['场景', c.where],
@@ -205,6 +219,21 @@ function renderWheel(stage, st) {
   accept.disabled = true; reject.disabled = true;
   actions.appendChild(accept); actions.appendChild(reject);
 
+  // 「随便」不占扇区：它和真实选项混在一张盘上，拒掉一个之后就没有悬念了，
+  // 所以放在盘外当按钮 —— 点了就是跳过本层，交给后端 50/50 掷一次。
+  if (w.skip) {
+    const sk = el('button', 'btn ghost skip', esc(w.skip.label || '都行，你替我定'));
+    sk.onclick = async () => {
+      if (BUSY) return;
+      BUSY = true;
+      await API.post('/api/accept', { key: w.skip.key });
+      BUSY = false;
+      addSys('行，这层我替你定了。');
+      await refresh();
+    };
+    actions.appendChild(sk);
+  }
+
   if (w.scene === 'dish') {
     const sel = el('select', 'picker');
     (w.budgetOptions || []).forEach(v => {
@@ -227,6 +256,15 @@ function renderWheel(stage, st) {
   WHEEL_CTX = { canvas: cv, options: w.options, scene: w.scene };
 
   let picked = null;
+  // 只剩一个选项：概率 100%，转也白转 —— 直接锁定，让人点「就要这个」
+  if (w.options.length === 1) {
+    picked = w.options[0].key;
+    accept.disabled = false;
+    reject.disabled = true;          // 只剩这一个，再拒就空了，干脆不让拒
+    center.disabled = true;
+    center.textContent = '只剩一个';
+    stage.insertBefore(el('p', 'stage-sub', `这层只剩「${picked}」了，没得转，直接定就行。`), wrap);
+  }
   center.onclick = async () => {
     if (BUSY) return;
     BUSY = true;
@@ -491,7 +529,11 @@ function renderCard(stage, st) {
   ok.onclick = finalize;
   no.onclick = async () => { await API.post('/api/again'); await refresh(); };
 
-  if (st.four && st.four.groups && st.four.groups.length) renderFour(stage, st);
+  if (st.four && st.four.groups && st.four.groups.length) {
+    stage.appendChild(el('p', 'stage-sub',
+      `同一条件下另有 ${Math.max(0, st.four.groups.length - 1)} 条备选，往下滑就是四条并排对比`));
+    renderFour(stage, st);
+  }
 }
 
 function fourTitle(four) {
@@ -676,7 +718,7 @@ async function runDemo() {
     addSys('▶ 一键演示开始：每一层都真的转、真的算，拒绝之后概率会真的重排。');
     await sleep(700);
 
-    tell('第 0 层 · 餐别：正餐 / 甜品饮料 / 随便，三份等概率');
+    tell('第 0 层 · 餐别：正餐 / 甜品饮料，两个扇区各 50%');
     await demoTurnTo('正餐'); await sleep(800);
     if (DEMO_STOP) return;
     await demoAccept('正餐'); await sleep(700);
@@ -686,7 +728,7 @@ async function runDemo() {
     if (DEMO_STOP) return;
     await demoAccept('食堂'); await sleep(700);
 
-    tell('第 2 层 · 口味：辣 / 不辣 / 随便');
+    tell('第 2 层 · 口味：辣 / 不辣，各 50%（「都行」是盘外按钮，不占扇区）');
     await demoTurnTo('辣'); await sleep(800);
     if (DEMO_STOP) return;
     await demoAccept('辣'); await sleep(900);
@@ -715,7 +757,10 @@ async function runDemo() {
     tell(`接受「${(s.wheel || {}).picked || ''}」，出美食名片 + 四条并列对比`);
     await API.post('/api/accept', { key: (s.wheel || {}).picked });
     await refresh();
-    await sleep(1600);
+    const gs = ((STATE && STATE.four && STATE.four.groups) || []);
+    addSys(`右边现在 = 名片 + ${gs.length} 条并列方案（${gs.map(g => g.label).join(' / ')}），`
+      + '这一步就是「转盘之后的多条方案」，停 5 秒看清再继续。');
+    await sleep(5200);
     if (DEMO_STOP) return;
 
     tell('让模型现写一句打卡文案，并把今天的选择落盘');
