@@ -18,7 +18,7 @@ import sys
 import threading
 import traceback
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 UI_DIR = os.path.join(ROOT, "ui")
@@ -329,10 +329,14 @@ def act_four(picked_id=None):
                       cuisine=SESS.choices.get("cuisine", ""))
     name = SESS.choices.get("dish")
     if name:
-        same = [c for c in pool if (c.get("name") or "").strip() == name]
-        if len(same) >= 2:
+        # 判定用 tools.dish_key：格子上合并的是「麻辣烫」，数据里可能叫「麻辣烫（自选）」，
+        # 这里要是还按字符串全等收窄，就会出现「格子说 3 家都有、点进去只比 2 家」。
+        k = tools.dish_key(name)
+        same = [c for c in pool if tools.dish_key(c.get("name")) == k]
+        shops = {tools.shop_key(c.get("shop")) for c in same}
+        if len(shops) >= 2:
             pool = same
-            log(f"[FOUR] 「{name}」{len(same)} 家都有，改比店铺")
+            log(f"[FOUR] 「{name}」{len(shops)} 家都有，改比店铺")
     payload, _ = _call("finalize", {"candidates_list": pool, "picked_id": picked_id}, layer="four")
     if not payload:
         payload = json.loads(tools.finalize(pool, picked_id=picked_id))
@@ -811,8 +815,8 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _svg(self, dish_id):
-        body = tools.plate_svg(dish_id).encode("utf-8")
+    def _svg(self, dish_id, name=""):
+        body = tools.plate_svg(dish_id, name=name).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "image/svg+xml; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
@@ -823,7 +827,9 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path.startswith("/plate/"):
-            return self._svg(unquote(path[len("/plate/"):]).rsplit(".", 1)[0])
+            # ?n= 是归一后的菜名：一道菜多家店时，图上写的名字要和名片标题一致
+            nm = (parse_qs(urlparse(self.path).query).get("n") or [""])[0]
+            return self._svg(unquote(path[len("/plate/"):]).rsplit(".", 1)[0], nm)
         if path in ("/", "/index.html"):
             self.path = "/index.html"
             return super().do_GET()

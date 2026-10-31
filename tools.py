@@ -37,6 +37,51 @@ CUISINE_ORDER = ["家常小炒", "清淡素菜", "风味小炒", "快餐简餐",
 CUISINE_LOW = "重口猎奇"
 LOW_RATING_N = 9
 
+# ------------------------- 同一个菜的判定标准 -------------------------
+# 盘上的一格 = 一道菜，不是一条数据。同一个菜在不同店/不同窗口会有不同写法：
+#   「麻辣烫」/「麻辣烫（自选）」、「冰鲜柠檬水」/「柠檬水」、「黄焖鸡米饭」/「黄焖鸡」
+# 光按字符串相等去重会漏掉这些，所以先把名字归一，再按归一的 key 分组。
+# 归一规则：去掉括号里的规格说明、空格、标点 —— 「（自选）」「（两荤一素）」「(大杯)」都算同一道菜。
+_SPEC_RE = re.compile(r"[（(][^）)]*[）)]")
+_PUNCT_RE = re.compile(r"[·・\-—_/\\、,，.。!！?？:：;；'\"“”‘’]")
+
+# 光归一化还不够：有些菜换了叫法（同一样东西的简称），只能人工列出来
+DISH_ALIAS = {
+    "柠檬水": "冰鲜柠檬水",       # 蜜雪冰城同一款，一家写成「柠檬水」
+    "黄焖鸡": "黄焖鸡米饭",       # 「黄焖鸡」是简称
+    "烧烤": "烤串",               # 「烧烤」就是烤串，别在盘上并排占两格
+}
+
+
+def dish_key(name):
+    """把菜名归一成「同一个菜」的 key（只用于分组，不改显示名）。"""
+    s = str(name or "").strip().replace(" ", "").replace("\u3000", "")
+    s = _SPEC_RE.sub("", s)
+    s = _PUNCT_RE.sub("", s)
+    return DISH_ALIAS.get(s, s) or s
+
+
+def shop_key(name):
+    """同一家店的判定：食堂窗口「杉锦苑·面档」和食堂「杉锦苑」是一家。"""
+    s = str(name or "").strip()
+    return re.split(r"[·・]", s)[0].strip() or s
+
+
+def _display_name(members):
+    """一组同菜的统一显示名 = 归一后的名字。
+
+    「麻辣烫（自选）」和「麻辣烫」都显示成「麻辣烫」，盘上一道菜只有一个名字；
+    具体是哪家、什么规格，选完这道菜在四条里看。
+    """
+    keys = [dish_key(m.get("name")) for m in members]
+    keys = [k for k in keys if k]
+    if not keys:
+        return ""
+    cnt = {}
+    for k in keys:
+        cnt[k] = cnt.get(k, 0) + 1
+    return sorted(cnt.items(), key=lambda kv: (-kv[1], len(kv[0]), kv[0]))[0][0]
+
 
 # ------------------------- 数据读取 -------------------------
 def _load():
@@ -305,7 +350,9 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where="", cuisi
         ctx = MEAL_LABELS.get(mt, "")
         items = []
         skip = {"key": "随便", "label": "哪都行，你替我定"}
-        counts = {o: len(candidates(meal_type=mt, where=o)) for o in options}
+        # 数字口径和菜系层/格子层一致：一道菜算一个（四家柠檬水只算一道菜）
+        counts = {o: len({dish_key(c.get("name")) for c in candidates(meal_type=mt, where=o)})
+                  for o in options}
     elif scene == "spice":
         options = ["辣", "不辣"]
         title = "🌶️ 今天想吃点啥口味？"
@@ -319,8 +366,16 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where="", cuisi
         if not pool:
             pool = candidates(meal_type=mt, where=where)
             note = f"「{preference}」没筛出东西，已放开口味"
+        # 扇区上的数字 = 点进去之后有几个格子，所以这里按「一道菜算一个」数，
+        # 不能拿原始记录条数（四家柠檬水在盘上只占一格）。
+        seen, all_dishes = set(), set()
         for c in pool:
             k = c.get("cuisine") or "家常小炒"
+            dk = dish_key(c.get("name"))
+            all_dishes.add(dk)
+            if (k, dk) in seen:
+                continue
+            seen.add((k, dk))
             counts[k] = counts.get(k, 0) + 1
         # 数量多的排前面；数量相同按固定菜系顺序，避免每次刷新顺序都在跳
         options = sorted(counts, key=lambda k: (-counts[k], _cuisine_rank(k)))
@@ -331,15 +386,17 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where="", cuisi
         low = []
         if unlock_low:
             low = candidates(meal_type=mt, spice=preference, where=where, cuisine=CUISINE_LOW)
-        if len(low) >= 3:
+        low_dishes = len({dish_key(c.get("name")) for c in low})
+        if low_dishes >= 3:
             options.append(CUISINE_LOW)
-            counts[CUISINE_LOW] = len(low)
+            counts[CUISINE_LOW] = low_dishes
         ctx = " · ".join(x for x in (where, preference if preference != "随便" else "") if x)
         items = []
         skip = None
         title = "🍜 想吃哪一类？"
         if not note:
-            note = f"共 {len(pool)} 个候选，按菜系分成 {len(options)} 组（名字后面是这一组有几个）"
+            note = (f"共 {len(all_dishes)} 道菜，按菜系分成 {len(options)} 组"
+                    "（名字后面是这一组有几道）")
         if CUISINE_LOW in options:
             note += "　🌈 前三层你都选了「随便」，隐藏款「重口猎奇」已解锁"
     elif scene == "dish":
@@ -363,27 +420,35 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where="", cuisi
                                                -float(x.get("distance", 0))))
         # 同一道菜只占一个格子：三家的「冰鲜柠檬水」是同一种菜，不该在盘上出现三次。
         # 去重后格子上写「3 家都有 · ¥6 起」，选完这道菜再在四条里比哪家更划算/更近/评分更高。
-        ordered, groups = [], {}
+        groups, order = {}, []
         for d in pool:
-            nm = (d.get("name") or "").strip()
-            if not nm:
+            k = dish_key(d.get("name"))
+            if not k:
                 continue
-            if nm in groups:
-                groups[nm].append(d)
-                continue
-            groups[nm] = [d]
-            ordered.append(d)
-        for i, d in enumerate(ordered):
-            same = groups[(d.get("name") or "").strip()]
-            if len(same) > 1:
-                # 代表店：最便宜 → 最近 → 评分高。格子上标的是这家的价，另标「N 家都有」
-                rep = min(same, key=lambda x: (float(x.get("price", 0)),
-                                               float(x.get("distance", 0)),
-                                               -float(x.get("rating", 0))))
-                rep = dict(rep)
-                rep["n_shops"] = len(same)
-                rep["price_min"] = min(float(x.get("price", 0)) for x in same)
-                ordered[i] = rep
+            if k not in groups:
+                groups[k] = []
+                order.append(k)
+            groups[k].append(d)
+        ordered = []
+        for k in order:
+            same = groups[k]
+            # 同一个店的重复记录先并掉（「杉锦苑·面档」和「杉锦苑」是一家，不能算两家店）
+            by_shop = {}
+            for d in same:
+                sk = shop_key(d.get("shop"))
+                cur = by_shop.get(sk)
+                if cur is None or float(d.get("price", 0)) < float(cur.get("price", 0)):
+                    by_shop[sk] = d
+            uniq = list(by_shop.values())
+            # 代表店：最便宜 → 最近 → 评分高。格子上标的是这家的价，另标「N 家都有」
+            rep = dict(min(uniq, key=lambda x: (float(x.get("price", 0)),
+                                                float(x.get("distance", 0)),
+                                                -float(x.get("rating", 0)))))
+            rep["name"] = _display_name(same)
+            if len(uniq) > 1:
+                rep["n_shops"] = len(uniq)
+                rep["price_min"] = min(float(x.get("price", 0)) for x in uniq)
+            ordered.append(rep)
         total = len(ordered)
         # 一个都不淘汰：随机抽签的前提是所有候选都在格子里（格子层用网格换行排版）
         if GRID_CAP and total > GRID_CAP:
@@ -404,7 +469,7 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where="", cuisi
             title = "🍽️ 转到哪道菜？（不喜欢就拒绝，剔掉重转）"
         if budget not in (None, "", "不限"):
             title += f"  ｜ 预算≤￥{float(budget):.0f}"
-        multi = sum(1 for v in groups.values() if len(v) > 1)
+        multi = sum(1 for d in ordered if (d.get("n_shops") or 1) > 1)
         if multi:
             tip = f"{multi} 道菜有多家店在卖，盘上合成了一个格子；选完这道菜，下面四条按最近/最便宜/评分给你比店"
             note = f"{note}；{tip}" if note else tip
@@ -437,6 +502,19 @@ def get_dish_card(name):
             out["price"] = s.get("avg_price")
             out["desc"] = s.get("desc", "")
             return out
+    # 判过盘上的名字是归一后的显示名（「麻辣烫」），数据里可能只写了「麻辣烫（自选）」
+    k = dish_key(name)
+    for d in _load().get("dishes", []):
+        if dish_key(d.get("name")) == k:
+            return d
+    for s in _load_shops().get("shops", []):
+        if dish_key(s.get("dish") or s.get("signature")) == k:
+            out = dict(s)
+            out["name"] = s.get("dish") or s.get("signature")
+            out["shop"] = s.get("name")
+            out["price"] = s.get("avg_price")
+            out["desc"] = s.get("desc", "")
+            return out
     return None
 
 
@@ -448,10 +526,14 @@ _PLATE_FAMILIES = [
 ]
 
 
-def plate_svg(dish_id):
-    """本地生成 4:3 菜品占位图（SVG，纯本地，断网也能显示）。"""
+def plate_svg(dish_id, name=""):
+    """本地生成 4:3 菜品占位图（SVG，纯本地，断网也能显示）。
+
+    name：图上要写的菜名。一道菜多家店时盘上用的是归一后的名字（「冰鲜柠檬水」），
+    数据里那条记录可能叫「柠檬水」，所以由调用方显式传进来，别让图和标题打架。
+    """
     d = get_dish_card(dish_id) or {}
-    name = d.get("name") or "这道菜"
+    name = name or d.get("name") or "这道菜"
     tags = d.get("tags", [])
     emoji = _dish_emoji(name)
     fam = _PLATE_FAMILIES[-1][1]
@@ -538,13 +620,14 @@ def finalize(candidates_list, picked_id=None, criteria_note=""):
 
     # 池子里只有一道菜的时候（选完菜品再看店），四条比的是「同一道菜去哪家买」；
     # 池子里是一桌菜的时候，按菜名去重 —— 三家的柠檬水不该占四个坑。
-    names = {(c.get("name") or "").strip() for c in cands}
-    single = len(names) == 1 and "" not in names
+    # 归一化后同名的（「麻辣烫」与「麻辣烫（自选）」）也算同一道菜，不然去重会漏。
+    names = {dish_key(c.get("name")) for c in cands} - {""}
+    single = len(names) == 1
 
     def key(c):
-        nm = (c.get("name") or "").strip()
+        nm = dish_key(c.get("name"))
         if single:
-            return (nm, c.get("shop") or "", c.get("id") or "")
+            return (nm, shop_key(c.get("shop")), c.get("id") or "")
         return (nm,) if nm else (c.get("shop") or "", c.get("id") or "")
 
     specs = [
@@ -563,7 +646,7 @@ def finalize(candidates_list, picked_id=None, criteria_note=""):
             for c in ordered:
                 if key(c) in used:
                     continue
-                if strict and c.get("shop") in used_shop:
+                if strict and shop_key(c.get("shop")) in used_shop:
                     continue
                 pick = c
                 break
@@ -572,14 +655,21 @@ def finalize(candidates_list, picked_id=None, criteria_note=""):
         if pick is None:            # 候选池不够四个不同选项：宁可不给，也不拿重复的凑数
             continue
         used.add(key(pick))
-        used_shop.add(pick.get("shop"))
+        used_shop.add(shop_key(pick.get("shop")))
+        item = dict(pick)
+        if single:
+            # 同一道菜比店时，四条上的菜名统一成归一后的名字（「柠檬水」→「冰鲜柠檬水」），
+            # 否则同一道菜在四条里两种写法，看着像两道菜
+            item["name"] = dish_key(item.get("name"))
         groups.append({"key": gkey, "label": label, "emoji": emoji,
-                       "item": pick, "reason": _reason(gkey, pick, cands),
+                       "item": item, "reason": _reason(gkey, pick, cands),
                        "picked": bool(picked_id) and pick.get("id") == picked_id})
 
     note = criteria_note.strip().rstrip("：:，,；; ")
     if single and len(cands) > 1:
-        tail = f"这道菜 {len(cands)} 家都在卖，比的是去哪家买（综合 / 近 / 便宜 / 评分）"
+        dims = " / ".join(g["label"] for g in groups)   # 只有 3 家卖就别写「四维」了
+        # 「N 家都在卖」放在四条标题上，这里只说比的是什么，别一句话重复三遍
+        tail = f"比的是去哪家买（{dims}）"
         note = f"{note}，{tail}" if note else tail
     elif len(groups) >= len(specs):
         note = f"{note}，按四个维度各挑一条" if note else "按四个维度各挑一条"
@@ -590,6 +680,7 @@ def finalize(candidates_list, picked_id=None, criteria_note=""):
     return json.dumps({
         "__four__": True, "groups": groups, "pool_size": len(cands),
         "picked_id": picked_id, "note": note,
+        "single_dish": bool(single),      # True = 这一组比的是「同一道菜去哪家买」
         "avg_price": round(sum(prices) / len(prices), 1),
     }, ensure_ascii=False)
 

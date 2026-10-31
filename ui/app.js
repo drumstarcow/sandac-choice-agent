@@ -19,6 +19,15 @@ let WHEEL_CTX = null;      // 当前转盘的画布与选项（演示时要在�
 let DEMO_STOP = false;     // 演示中途可点按钮停止
 
 const $ = s => document.querySelector(s);
+// 菜品图：?n= 传归一后的菜名，图和名片标题才不会一个写「柠檬水」一个写「冰鲜柠檬水」
+function plateSrc(it) {
+  if (!it) return '';
+  if (it.img) return it.img;
+  const id = it.id || '';
+  const nm = it.name || '';
+  return `/plate/${id}.svg` + (nm ? `?n=${encodeURIComponent(nm)}` : '');
+}
+
 const el = (tag, cls, html) => {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -478,7 +487,7 @@ function renderGrid(stage, st) {
     const n = it.n_shops || 1;
     const price = n > 1 ? `¥${it.price_min ?? it.price} 起` : `¥${it.price}`;
     const c = el('div', 'cell',
-      `<img src="${esc(it.img || '/plate/' + it.id + '.svg')}" alt="${esc(it.name)}" loading="eager">
+      `<img src="${esc(plateSrc(it))}" alt="${esc(it.name)}" loading="eager">
        <div class="cell-meta"><span class="cell-name">${esc(it.name)}</span>
        <span class="cell-price">${esc(price)}</span>
        ${n > 1 ? `<span class="cell-shop">${n} 家都有</span>` : ''}</div>`);
@@ -569,7 +578,7 @@ function renderCard(stage, st) {
   stage.appendChild(el('h2', 'stage-title', '这张名片，看着还行吗？'));
   const card = el('div', 'card');
   card.innerHTML = `
-    <img src="${esc(c.img || '/plate/' + (c.id || '') + '.svg')}" alt="${esc(c.name)}">
+    <img src="${esc(plateSrc(c))}" alt="${esc(c.name)}">
     <div class="card-body">
       <h3 class="card-name">${esc(c.name)}</h3>
       <div class="card-shop">${esc(c.shop || '')}</div>
@@ -593,10 +602,12 @@ function renderCard(stage, st) {
   if (st.four && st.four.groups && st.four.groups.length) {
     const gs = st.four.groups;
     const other = Math.max(0, gs.length - 1);
-    const sameDish = gs.length > 1 && gs.every(g => g.item.name === gs[0].item.name);
-    stage.appendChild(el('p', 'stage-sub', sameDish
-      ? `这道菜还有 ${other} 家在卖，往下滑看看哪家更值（也可以点「换一个」换道菜）`
-      : `同一条件下另有 ${other} 条备选，往下滑就是四条并排对比`));
+    // 后端在「同一道菜比店」时会带 single_dish，别靠比较名字（名字可能被统一过）
+    const sameDish = st.four.single_dish || (gs.length > 1 && gs.every(g => g.item.name === gs[0].item.name));
+    // 同一道菜比店时，标题已经写了「N 家都在卖」，这里再写一遍就是啰嗦
+    if (!sameDish) {
+      stage.appendChild(el('p', 'stage-sub', `同一条件下另有 ${other} 条备选，往下滑就是四条并排对比`));
+    }
     renderFour(stage, st);
   }
 }
@@ -605,7 +616,7 @@ function fourTitle(four) {
   const n = (four.groups || []).length;
   const gs = four.groups || [];
   // 选完某道菜后，四条比的是「去哪家买」：名字都一样，别再说「符合条件的就这几条」
-  const sameDish = n > 1 && gs.every(g => g.item.name === gs[0].item.name);
+  const sameDish = four.single_dish || (n > 1 && gs.every(g => g.item.name === gs[0].item.name));
   if (sameDish) return `这道菜 ${n} 家都在卖，挑一家去`;
   if (four.keyword && four.matched === false) {
     return `没有「${four.keyword}」，换成这些？`;
@@ -662,7 +673,7 @@ function renderFinal(stage, st) {
   stage.appendChild(el('h2', 'stage-title', '今天的决定，贴这儿了'));
   const card = el('div', 'final');
   card.innerHTML = `
-    <img src="${esc(f.img || ('/plate/' + (f.id || '') + '.svg'))}" alt="${esc(f.name)}">
+    <img src="${esc(plateSrc(f))}" alt="${esc(f.name)}">
     <div class="final-body">
       <div class="final-kicker">今日打卡 · ${esc(f.meal)}</div>
       <h3 class="final-name">${esc(f.name)}</h3>

@@ -43,10 +43,10 @@ def main():
     w = dump("选 %s" % cuisine, server.act_accept(cuisine))
     names = [o["key"] for o in w["options"]]
     pool = tools.candidates(meal_type="meal", spice="辣", where="食堂", cuisine=cuisine)
-    uniq = list(dict.fromkeys(c["name"] for c in pool))
+    uniq = list(dict.fromkeys(tools.dish_key(c["name"]) for c in pool))
     print("        候选 %d 个 → 格子 %d 个（同名合并后）" % (len(pool), len(names)))
     assert names == uniq, "格子不是按菜名去重的候选（顺序/内容对不上）"
-    assert len(names) == len(set(names)), "格子里还有重名菜"
+    assert len(names) == len({tools.dish_key(n) for n in names}), "格子里还有同名菜"
     assert all(not i.get("n_shops") or i["n_shops"] >= 2 for i in w["items"]), "n_shops 标记不对"
 
     s = server.act_spin()
@@ -57,10 +57,12 @@ def main():
     gs = four.get("groups", [])
     print("名片:", (r.get("card") or {}).get("name"),
           "| 四条:", [g["label"] + ":" + g["item"]["name"] + "@" + (g["item"].get("shop") or "") for g in gs])
-    same = [c for c in pool if c["name"] == picked]
-    if len(same) >= 2:
-        assert all(g["item"]["name"] == picked for g in gs), "多店菜的四条应该是同一道菜"
-        assert len({g["item"]["shop"] for g in gs}) == len(gs), "四条应各是一家店"
+    pk = tools.dish_key(picked)
+    same = [c for c in pool if tools.dish_key(c["name"]) == pk]
+    shops = {tools.shop_key(c.get("shop")) for c in same}
+    if len(shops) >= 2:
+        assert all(tools.dish_key(g["item"]["name"]) == pk for g in gs), "多店菜的四条应该是同一道菜"
+        assert len({tools.shop_key(g["item"]["shop"]) for g in gs}) == len(gs), "四条应各是一家店"
         assert len(gs) >= 2, "多店菜至少有两条店铺方案"
     else:
         assert len(gs) == 4, "四条不足"
@@ -108,6 +110,43 @@ def main():
     server.act_build_meal()
     server.act_accept("甜品饮料")
     dump("外面吃", server.act_accept("外面吃"))
+
+    print()
+    print("=" * 70)
+    print("五、全盘扫描：每张盘的格子都不许有同一个菜，扇区数字 = 点进去的格子数")
+    print("=" * 70)
+    import json
+
+    total_checked = 0
+    for mt in ("meal", "dessert"):
+        for where in ("食堂", "外面吃", "外卖", "随便"):
+            cw = json.loads(tools.build_wheel("cuisine", preference="随便", where=where,
+                                              meal_type=mt, unlock_low=True))
+            # 扇区上写的数字（不含彩蛋区）应当等于该类去重后的菜数
+            detail = 0
+            for o in cw["options"]:
+                if o == tools.CUISINE_LOW:
+                    continue
+                dw = json.loads(tools.build_wheel("dish", preference="随便", where=where,
+                                                  cuisine=o, meal_type=mt))
+                keys = [tools.dish_key(k) for k in dw["options"]]
+                assert len(keys) == len(set(keys)), "%s/%s/%s 盘上有重复菜：%s" % (
+                    mt, where, o, dw["options"])
+                assert (cw.get("counts") or {}).get(o) == len(keys), "%s/%s/%s 扇区写 %s，点进去 %d 格" % (
+                    mt, where, o, (cw.get("counts") or {}).get(o), len(keys))
+                # 多店合并的格子，n_shops 必须和真实店数一致
+                for it in dw["items"]:
+                    if it.get("n_shops"):
+                        pool = tools.candidates(meal_type=mt, where=where, cuisine=o)
+                        n = len({tools.shop_key(c.get("shop")) for c in pool
+                                 if tools.dish_key(c["name"]) == tools.dish_key(it["name"])})
+                        assert n == it["n_shops"], "「%s」标 %d 家，实际 %d 家" % (it["name"], it["n_shops"], n)
+                detail += len(keys)
+                total_checked += 1
+            print("  %s/%s：扇区数字合计 %d，进去后格子合计 %d" % (
+                {"meal": "正餐", "dessert": "甜品"}[mt], where,
+                sum(v for k, v in (cw.get("counts") or {}).items() if k != tools.CUISINE_LOW), detail))
+    print("  共核对 %d 张盘，无重复菜" % total_checked)
 
     print()
     print("全部断言通过。")
