@@ -94,7 +94,7 @@
 | ≥1 个 Skill | `skills/decision_skill/` |
 | 界面 | **桌面窗口**（`app.py`：pywebview → Edge `--app` 无边框窗口 → 浏览器，三级降级），前端 `ui/` |
 | 危险操作有确认 | 发给室友 / 写长期记忆 → 前端必须确认才执行 |
-| README + HTML 幻灯片 | 本文件 + `归档旧版本/slides.html` |
+| README + HTML 幻灯片 | 本文件 + **`slides.html`**（单文件、图片内嵌，双击即开，12 页） |
 | 提交到自己的 Git 仓库 | GitCode: bravecow/sandac-choice-agent |
 
 ---
