@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>吃饱饱助手 · 校园吃饭决策智能体</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🍱</span>
+      <div>
+        <h1>吃饱饱助手</h1>
+        <p>校园吃饭决策智能体 · 真模型 · 真工具调用</p>
+      </div>
+    </div>
+    <div class="meta">
+      <span class="model" id="modelBadge">连接中…</span>
+      <span class="tag-net" id="netNote" hidden></span>
+      <span class="tag-fallback" id="fallbackTag" hidden>兜底模式</span>
+      <button class="btn ghost" id="btnPref">偏好面板</button>
+      <button class="btn ghost" id="btnReset">重新开始</button>
+      <button class="btn primary" id="btnDemo">▶ 一键演示</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="chat">
+      <div class="chat-log" id="chatLog"></div>
+      <div class="composer">
+        <input id="input" autocomplete="off"
+               placeholder="想吃点什么？例：想吃火锅 / 随便 / 附近有啥便宜的">
+        <button class="btn primary" id="btnSend">发送</button>
+      </div>
+      <div class="quick" id="quick">
+        <button class="chip-btn" data-text="随便，你帮我选">随便，你帮我选</button>
+        <button class="chip-btn" data-text="我想吃火锅">我想吃火锅</button>
+        <button class="chip-btn" data-text="附近有啥便宜又好吃的">附近有啥便宜又好吃的</button>
+      </div>
+    </section>
+
+    <section class="stage" id="stage"></section>
+  </main>
+
+  <aside class="pref-panel" id="prefPanel" hidden>
+    <div class="pref-head">
+      <strong>我的偏好</strong>
+      <button class="icon-btn" id="prefClose">×</button>
+    </div>
+    <div class="pref-chips" id="prefChips"></div>
+    <div class="pref-foot">
+      <div class="pref-title">最近 10 条记录生成的画像</div>
+      <p id="prefRecent">—</p>
+    </div>
+  </aside>
+
+  <div class="runlog" id="runlog" aria-live="polite"></div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,5 +1,15 @@
-# 杉达校园服务智能体 —— 依赖清单
-# Python 版本要求：3.10 及以上（已在 3.13 验证）
-openai>=1.40.0
-streamlit>=1.35.0
-python-dotenv>=1.0.0
+# ===== 吃饱饱助手 · 依赖清单 =====
+# 核心（app.py / server.py / agent.py / tools.py / preflight.py）**零第三方依赖**：
+#   Python 3.10+ 标准库即可跑（urllib 调模型、http.server 起服务、Canvas 画转盘）。
+#
+# 可选项（不装也能跑，只是窗口形态不同）：
+#   pywebview     → 用自带内核开窗口；装不上自动降级为 Edge --app 无边框窗口，再降级为默认浏览器
+#   python-dotenv → 有就用它读 .env；没有则用 config.py 自带的极简解析
+#
+# 想装可选件：
+# pywebview>=4.4
+# python-dotenv>=1.0.0
+
+# ===== 旧版 Streamlit 界面（legacy/app_streamlit.py）才需要的依赖，主链路不再使用 =====
+# openai>=1.40.0
+# streamlit>=1.35.0

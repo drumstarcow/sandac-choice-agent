@@ -31,3 +31,6 @@ Thumbs.db
 .vscode/
 outputs/*.txt
 outputs/*.png
+
+# ===== 演示截图（本地留档，不进仓库） =====
+outputs/shots/
