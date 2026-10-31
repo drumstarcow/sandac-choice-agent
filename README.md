@@ -52,7 +52,7 @@
 | ≥1 个 Skill | `skills/decision_skill/` |
 | 界面 | **桌面窗口**（`app.py`：pywebview → Edge `--app` 无边框窗口 → 浏览器，三级降级），前端 `ui/` |
 | 危险操作有确认 | 发给室友 / 写长期记忆 → 前端必须确认才执行 |
-| README + HTML 幻灯片 | 本文件 + `legacy/slides.html` |
+| README + HTML 幻灯片 | 本文件 + `归档旧版本/slides.html` |
 | 提交到自己的 Git 仓库 | GitCode: bravecow/sandac-choice-agent |
 
 ---
@@ -69,34 +69,41 @@
 ## 四、目录结构
 
 ```
-.
-├── app.py                 # ★ 唯一演示入口：起服务 + 开桌面窗口
-├── server.py              # 后端：会话状态机 / 四层推进 / 四条推荐 / HTTP 路由
-├── agent.py               # Agent 核心：系统提示词 + Tool Calling 循环 + 分阶段工具作用域
-├── tools.py               # 业务工具层：候选池 / WheelEngine / build_wheel / search_dish / finalize
-├── config.py              # 模型后端：云优先、本地兜底（自带极简 .env 解析，不装 dotenv 也能跑）
-├── profile.py             # 用户画像读写
-├── history.py             # 选择历史 + 最近 10 条聚合为近期画像
-├── preflight.py           # 启动自检：模型 / 数据 / 工具 三行 OK
+吃饱饱助手/
 ├── 启动吃饱饱.bat          # ★ 双击即跑（自动探测 Python 解释器）
 ├── 自检.bat                # 双击跑 preflight.py
-├── ui/                    # ★ 前端（转盘 + 菜品格子 + 名片 + 四条 + 收尾卡片）
+├── app.py                  # ★ 唯一演示入口：起服务 + 开桌面窗口
+├── server.py               # 后端：会话状态机 / 四层推进 / 四条推荐 / HTTP 路由
+├── agent.py                # Agent 核心：系统提示词 + Tool Calling 循环 + 分阶段工具作用域
+├── tools.py                # 业务工具层：候选池 / WheelEngine / build_wheel / search_dish / finalize
+├── config.py               # 模型后端：云优先、本地兜底（自带极简 .env 解析，不装 dotenv 也能跑）
+├── profile.py              # 用户画像读写
+├── history.py              # 选择历史 + 最近 10 条聚合为近期画像
+├── preflight.py            # 启动自检：模型 / 数据 / 工具 三行 OK
+├── ui/                     # ★ 前端（转盘 + 菜品格子 + 名片 + 四条 + 收尾卡片）
 │   ├── index.html
 │   ├── app.css
 │   └── app.js
 ├── data/
-│   ├── food_data.json     # 菜品（含 meal_type/img/rating/distance/desc）
-│   ├── shops.json         # 周边商户（含招牌菜、meal_type）
-│   ├── campus.json        # 校区真实经纬度
-│   ├── profile.json       # 画像（本地，不进仓库）
-│   └── history.json       # 历史（本地，不进仓库）
-├── outputs/               # 生成的「今日决定」md + 演示截图
-├── skills/decision_skill/ # Skill 清单与入口封装
-├── legacy/                # 旧入口归档：Streamlit app / webchat / 终端对话 / cli / slides / wheel.html
-├── .env.example           # 配置样例（.env 不进仓库）
-├── requirements.txt       # 说明：核心零依赖，可选件见文件内注释
+│   ├── food_data.json      # 菜品（含 meal_type/img/rating/distance/desc）
+│   ├── shops.json          # 周边商户（含招牌菜、meal_type）
+│   ├── campus.json         # 校区真实经纬度
+│   ├── profile.json        # 画像（本地，不进仓库）
+│   └── history.json        # 历史（本地，不进仓库）
+├── skills/decision_skill/  # Skill 清单与入口封装
+├── outputs/                # 运行产物：每次决定生成的「今日决定」md
+├── 文档/
+│   ├── 作业清单（原始需求）.md
+│   └── 评审记录与修复.md      # ★ 两轮评审的问题、根因、修复与实测证据
+├── 演示材料/
+│   └── 截图/                # 界面各阶段截图（含 old/ 旧版对比）
+├── 归档旧版本/              # 旧入口归档：Streamlit / webchat / 终端对话 / cli / slides / wheel.html
+├── .env.example            # 配置样例（.env 不进仓库）
+├── requirements.txt        # 说明：核心零依赖，可选件见文件内注释
 └── README.md
 ```
+
+> 只跑程序不需要看 `文档/`、`演示材料/`、`归档旧版本/` 三个文件夹；它们是提交与答辩用的材料。
 
 ---
 

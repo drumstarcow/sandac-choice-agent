@@ -34,3 +34,6 @@ outputs/*.png
 
 # ===== 演示截图（本地留档，不进仓库） =====
 outputs/shots/
+
+# ===== WorkBuddy 工作目录（不属于交付内容） =====
+.workbuddy/
