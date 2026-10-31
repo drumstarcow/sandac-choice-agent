@@ -273,7 +273,7 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where="", cuisi
 
     五层：meal(餐别) → where(场景) → spice(口味) → cuisine(菜系) → dish(菜品)
       - "meal"    第 0 层：正餐 / 甜品饮料（另有盘外「都行」）
-      - "where"   第 1 层：食堂 / 外面吃 / 外卖 / 随便（四个真扇区）
+      - "where"   第 1 层：食堂 / 外面吃 / 外卖（另有盘外「哪都行」）
       - "spice"   第 2 层：辣 / 不辣（另有盘外「都行」；甜品这层自动跳过）
       - "cuisine" 第 3 层：菜系，按当前池子的真实分布生成，末尾附彩蛋区「重口猎奇」
       - "dish"    第 4 层：具体菜品（格子，封顶 GRID_CAP 个）
@@ -294,23 +294,23 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where="", cuisi
         items = []
         skip = {"key": "随便", "label": "都行，你替我定"}
     elif scene == "where":
-        # 场景层四个扇区都是真的：食堂/外面吃/外卖彼此有实质区别，
-        # 「随便」在这里不是冗余 —— 它代表「不限场景」，而且它一被选中就直接进下一层，
-        # 不需要像餐别层那样靠「拒掉一个」才显出多余。
-        options = list(data.get("where_options") or ["食堂", "外面吃"])
-        for extra in ("外卖", "随便"):
+        # 三个扇区都是真的：食堂/外面吃/外卖彼此有实质区别（外卖=真能送到宿舍的店）。
+        # 「随便」= 不限场景，和真实选项不在一个维度上，所以和餐别层一样放到盘外：
+        # 盘上只留互斥的真选项，拒掉一个之后剩下的仍然是真选项，不会转出一句废话。
+        options = [o for o in (data.get("where_options") or ["食堂", "外面吃"]) if o != "随便"]
+        for extra in ("外面吃", "外卖"):
             if extra not in options:
                 options.append(extra)
         title = "📍 今天在哪吃？"
         ctx = MEAL_LABELS.get(mt, "")
         items = []
-        skip = None
-        counts = {o: len(candidates(meal_type=mt, where=o)) for o in options if o != "随便"}
-        counts["随便"] = len(candidates(meal_type=mt))
+        skip = {"key": "随便", "label": "哪都行，你替我定"}
+        counts = {o: len(candidates(meal_type=mt, where=o)) for o in options}
     elif scene == "spice":
         options = ["辣", "不辣"]
         title = "🌶️ 今天想吃点啥口味？"
-        ctx = where
+        # 「随便/不限场景」当上一层的提示没意义，干脆不显示
+        ctx = "" if where in ("", "随便") else where
         items = []
         skip = {"key": "随便", "label": "都行，你替我定"}
     elif scene == "cuisine":
@@ -914,7 +914,7 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "build_wheel",
-            "description": "生成一个“决策大转盘”的配置（五层）。scene：meal=第0层(正餐/甜品饮料)；where=第1层(食堂/外面吃/外卖/随便)；spice=第2层(辣/不辣)；cuisine=第3层(菜系，按当前候选分布自动分组，末位附带“重口猎奇”彩蛋区)；dish=第4层(具体菜品格子)。preference 为上层已确定的上下文（第2层填口味，第3层填菜系）。选项全部来自真实数据。",
+            "description": "生成一个“决策大转盘”的配置（五层）。scene：meal=第0层(正餐/甜品饮料)；where=第1层(食堂/外面吃/外卖，不含“随便”，“随便”是盘外按钮)；spice=第2层(辣/不辣)；cuisine=第3层(菜系，按当前候选分布自动分组，末位附带“重口猎奇”彩蛋区)；dish=第4层(具体菜品格子)。preference 为上层已确定的上下文（第2层填口味，第3层填菜系）。选项全部来自真实数据。",
             "parameters": {
                 "type": "object",
                 "properties": {

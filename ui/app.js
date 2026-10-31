@@ -35,11 +35,15 @@ async function init() {
   addSys('我是吃饱饱，今天想好吃啥了不？没想法就把选择权交给命运 🎰');
   addWelcome();
   // 调试/排练钩子：?auto=demo 自动跑一键演示，?auto=wheel 直接起盘，
-  // ?auto=card 一路跳到「名片 + 四条」这一屏（答辩排练/排查用，不做动画）
+  // ?auto=card 一路跳到「名片 + 四条」这一屏，
+  // ?auto=where|spice|cuisine|dish 直接打开指定那一层（排查/截图用）
   const auto = new URLSearchParams(location.search).get('auto');
   if (auto === 'demo') runDemo();
   else if (auto === 'wheel') startWheel();
   else if (auto === 'card') jumpToCard();
+  else if (['meal', 'where', 'spice', 'cuisine', 'dish'].includes(auto)) {
+    await jumpLayer(auto, { meal: '餐别', where: '场景', spice: '口味', cuisine: '菜系', dish: '菜品' }[auto]);
+  }
 }
 
 /* 排练/排查用：不做动画，直接把会话推进到「名片 + 四条」那一屏 */
@@ -169,19 +173,42 @@ function crumbs(st) {
   const box = el('div', 'crumbs');
   // 名片/收尾阶段转盘已经销毁，选择记录要从 state.choices 取，否则面包屑会整排变灰
   const c = st.choices || (st.wheel && st.wheel.choices) || {};
+  const cur = (st.wheel || {}).scene || '';
   const items = [
-    ['餐别', st.mealLabel || c.meal],
-    ['场景', c.where],
-    ['口味', c.spice === '随便' ? '不过滤' : c.spice],
-    ['菜系', c.cuisine],
-    ['菜品', c.dish],
+    ['餐别', 'meal', st.mealLabel || c.meal],
+    ['场景', 'where', c.where],
+    ['口味', 'spice', c.spice === '随便' ? '不过滤' : c.spice],
+    ['菜系', 'cuisine', c.cuisine],
+    ['菜品', 'dish', c.dish],
   ];
-  items.forEach(([k, v]) => {
+  box.appendChild(el('span', 'crumb-tip', '点任意一层可直达'));
+  items.forEach(([k, scene, v]) => {
     const on = !!v;
-    box.appendChild(el('span', 'crumb' + (on ? ' on' : ''), `${k}${v ? '：' + esc(v) : ''}`));
+    const node = el('button', 'crumb' + (on ? ' on' : '') + (cur === scene ? ' cur' : ''),
+      `${k}${v ? '：' + esc(v) : ''}`);
+    node.type = 'button';
+    node.title = `直接打开「${k}」这一层转盘`;
+    node.onclick = () => jumpLayer(scene, k);
+    box.appendChild(node);
   });
   if (st.budget && st.budget !== '不限') box.appendChild(el('span', 'crumb on', `预算 ≤ ¥${esc(st.budget)}`));
   return box;
+}
+
+/* 层级直达：用户心里已经定了某一层，就别逼他从头转一遍。
+   直接调后端把那一层的转盘重新造出来（候选、概率还是同一套真实数据）。 */
+async function jumpLayer(scene, label) {
+  if (BUSY) return;
+  BUSY = true;
+  let r = null;
+  try {
+    r = await API.post('/api/jump', { scene });
+  } finally {
+    BUSY = false;
+  }
+  if (r && r.note) addSys(r.note);
+  else addSys(`已经把「${label}」这一层调出来了。`);
+  await refresh();
 }
 
 /* ---------- 转盘 ---------- */
@@ -743,7 +770,7 @@ async function runDemo() {
     if (DEMO_STOP) return;
     await demoAccept('正餐'); await sleep(700);
 
-    tell('第 1 层 · 场景：食堂 / 外面吃 / 外卖 / 随便，四个扇区都带真实候选数');
+    tell('第 1 层 · 场景：食堂 / 外面吃 / 外卖，三个扇区都带真实候选数（「哪都行」在盘外）');
     await demoTurnTo('食堂'); await sleep(800);
     if (DEMO_STOP) return;
     await demoAccept('食堂'); await sleep(700);

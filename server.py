@@ -193,6 +193,13 @@ def _go_cuisine(preference):
 
 
 def act_build_meal():
+    # 从第一层重新起盘 = 开新的一轮：上一轮残留的场景/口味/菜系选择必须清掉，
+    # 否则面包屑会串台（点「开始转盘」却显示上次的场景和菜系）。
+    SESS.choices, SESS.rnd = {}, {"meal": False, "where": False, "spice": False}
+    SESS.meal_type = SESS.meal_label = ""
+    SESS.card = SESS.four = SESS.final = None
+    SESS.rejected = []
+    SESS.engine = WheelEngine()      # 新的一轮：上一轮的衰减/清零记录一并作废
     if _wheel("meal"):
         return {"wheel": SESS.wheel_view()}
     return {"wheel": None, "note": "造盘失败，请重试"}
@@ -232,12 +239,6 @@ def act_reject(key):
         SESS.wheel = None
         return {"wheel": None, "note": "所有选项都被你拒了，换个说法我再给你来一轮。"}
     note = f"「{key}」已剔除，权重清零，概率已重排。"
-    if scene == "where":
-        # 「随便」= 场景不限。真选项被拒到只剩一个时，它等于那个选项，自动撤下
-        real = [o for o in opts if o != "随便"]
-        if "随便" in opts and len(real) <= 1:
-            opts = [o for o in opts if o != "随便"]
-            note += "「随便」也自动撤下了——只剩一个场景可选时它就等于那个选项，没意义。"
     w["options"] = opts
     if scene == "dish":
         w["items"] = [i for i in w.get("items", []) if i.get("name") != key]
@@ -275,7 +276,8 @@ def act_accept(key):
             SESS.rnd["spice"] = True       # 没有这一层，等于也交给了命运
             log("[SKIP] 甜品饮料不需要口味层，直接进菜系")
             return _go_cuisine("随便")
-        _wheel("spice", preference=key, layer="spice")
+        # 盘外的「哪都行」= 不限场景；口味层的「上一层」提示就别写成「随便」了
+        _wheel("spice", preference="" if key == "随便" else key, layer="spice")
         return {"wheel": SESS.wheel_view(), "accepted": key}
 
     if scene == "spice":
@@ -327,6 +329,67 @@ def act_four(picked_id=None):
     SESS.four = payload
     log(f"[FOUR] pool={payload.get('pool_size')} groups={len(payload.get('groups', []))}")
     return {"four": payload}
+
+
+LAYERS = ["meal", "where", "spice", "cuisine", "dish"]
+LAYER_NAMES = {"meal": "餐别", "where": "场景", "spice": "口味", "cuisine": "菜系", "dish": "菜品"}
+
+
+def act_jump(scene="", key=None):
+    """直接打开某一层转盘，不必从第一层一层层转下来。
+
+    用户心里已经有数（「我就想去外面吃」「我就是想吃火锅」）时，前面的层级纯属浪费点击。
+    做法：清掉这一层及其之后的选择，缺失的上层上下文用最中性的默认值补齐，
+    然后照常真实调用 build_wheel —— 盘上的候选、概率、四条推荐全都还是同一套数据。
+    """
+    scene = tools._norm_scene(scene)
+    if scene not in LAYERS:
+        return {"wheel": SESS.wheel_view(), "note": "这层没认出来，还是看当前这张盘。"}
+
+    # 回到这一层：本层及之后的选择全部作废，名片/四条一起收起来
+    for k in LAYERS[LAYERS.index(scene):]:
+        SESS.choices.pop(k, None)
+        if k in SESS.rnd:
+            SESS.rnd[k] = False
+    SESS.card = None
+    SESS.four = None
+    SESS.final = None
+
+    # 上层没走过的，用最中性的默认值补上（正餐 / 不限场景 / 不限口味）
+    if scene != "meal" and not SESS.meal_type:
+        SESS.meal_type, SESS.meal_label = "meal", "正餐"
+        SESS.choices["meal"] = "正餐"
+    if scene in ("spice", "cuisine", "dish"):
+        SESS.choices.setdefault("where", "随便")
+        SESS.choices.setdefault("spice", "随便")
+
+    if scene == "meal":
+        _wheel("meal", layer="meal")
+    elif scene == "where":
+        _wheel("where", layer="where")
+    elif scene == "spice":
+        if SESS.meal_type == "dessert":
+            # 奶茶咖啡没有辣不辣，这一层本来就不存在
+            _go_cuisine("随便")
+        else:
+            _wheel("spice", preference=SESS.choices.get("where", ""), layer="spice")
+    elif scene == "cuisine":
+        _go_cuisine(SESS.choices.get("spice", "随便"))
+    else:
+        _wheel("dish", preference=SESS.choices.get("spice", "随便"), layer="dish")
+
+    if not SESS.wheel or not SESS.wheel.get("options"):
+        return {"wheel": None, "note": f"「{LAYER_NAMES[scene]}」这层暂时没有可选项。"}
+
+    # 直接点了某个具体选项（例如面包屑/口令里点名火锅）→ 当作已经选定，继续往下走
+    if key and key in (SESS.wheel.get("options") or []):
+        out = act_accept(key)
+        out["note"] = f"直接定了「{key}」，往前走了。"
+        return out
+
+    real = LAYER_NAMES.get(SESS.wheel.get("scene"), LAYER_NAMES[scene])
+    log(f"[JUMP] 直接打开「{real}」层")
+    return {"wheel": SESS.wheel_view(), "note": f"已跳过前面几层，直接打开「{real}」转盘。"}
 
 
 def act_budget(value):
@@ -411,7 +474,10 @@ def act_finalize():
     if not name:
         return {"final": None, "note": "还没定菜呢，先转一下转盘。"}
     cheer, how = _cheer(item)
-    where = SESS.choices.get("where") or ("外面吃" if item.get("source") == "shop" else "食堂")
+    # 场景选了「随便」的话，卡片上的「在哪吃」不能真写个「随便」，用这道菜实际的归属兜底
+    where = SESS.choices.get("where") or ""
+    if where in ("", "随便"):
+        where = item.get("where") or ("外面吃" if item.get("source") == "shop" else "食堂")
     spice = SESS.choices.get("spice", "随便")
     saved = ""
     try:
@@ -514,13 +580,28 @@ def act_chat(text):
         if not w.get("options"):
             _wheel("meal", layer="meal")
         else:
+            scene = w.get("scene", "meal")
+            # 模型可能被用户一句「直接看菜系」直接叫到某一层，上层的上下文就缺了；
+            # 补齐成「正餐 / 不限场景 / 不限口味」，面包屑和后续筛选用的是同一份状态。
+            if scene != "meal" and not SESS.meal_type:
+                SESS.meal_type, SESS.meal_label = "meal", "正餐"
+                SESS.choices.setdefault("meal", "正餐")
+            if scene in ("spice", "cuisine", "dish"):
+                SESS.choices.setdefault("where", "随便")
+            if scene in ("cuisine", "dish"):
+                SESS.choices.setdefault("spice", "随便")
             SESS.wheel = w
-            SESS.step = w.get("scene", "meal")
+            SESS.step = scene
             if w.get("meal_type"):
                 SESS.meal_type = w["meal_type"]
                 SESS.meal_label = tools.MEAL_LABELS.get(w["meal_type"], "")
         if not content:
-            out.append(_msg("既然没想法，那不如把选择权交给命运吧 🎰", calls=calls))
+            # 模型跳了层（不是从餐别起盘）就别再念「交给命运」那句，它说的是反话
+            jumped = SESS.wheel and SESS.wheel.get("scene") not in ("meal", None)
+            if jumped:
+                out.append(_msg(f"行，跳过前面几层，直接看「{LAYER_NAMES.get(SESS.wheel['scene'], '这一层')}」。", calls=calls))
+            else:
+                out.append(_msg("既然没想法，那不如把选择权交给命运吧 🎰", calls=calls))
         out.append({"role": "wheel", "wheel": SESS.wheel_view()})
     elif status == "recommend" and r.get("recommend"):
         # 模型有时会走 recommend_nearby_food（店铺维度）；统一转成「四条并列」再上屏，
@@ -690,6 +771,7 @@ ROUTES = {
     "/api/spin": lambda p: act_spin(),
     "/api/reject": lambda p: act_reject(p.get("key", "")),
     "/api/accept": lambda p: act_accept(p.get("key", "")),
+    "/api/jump": lambda p: act_jump(p.get("scene", ""), p.get("key")),
     "/api/budget": lambda p: act_budget(p.get("value", "不限")),
     "/api/four": lambda p: act_four(p.get("picked_id")),
     "/api/select": lambda p: act_select(p),

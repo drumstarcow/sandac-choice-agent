@@ -170,8 +170,14 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 .stage > * { flex: 0 0 auto; }
 
 .crumbs { display: flex; gap: var(--s1); flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 12px; }
-.crumb { padding: 2px var(--s1); border-radius: 999px; background: #FFF; border: 1px solid var(--line); }
+.crumb {
+  padding: 2px var(--s1); border-radius: 999px; background: #FFF; border: 1px solid var(--line);
+  font: inherit; color: inherit; cursor: pointer; transition: border-color .15s, color .15s;
+}
+.crumb:hover { border-color: var(--orange); color: var(--orange); }
 .crumb.on { color: #A8431A; background: var(--orange-soft); border-color: #FFD3B8; font-weight: 600; }
+.crumb.cur { box-shadow: inset 0 0 0 2px rgba(232, 98, 44, .55); }
+.crumb-tip { font-size: 11px; opacity: .7; }
 
 .stage-title { font-size: 16px; font-weight: 700; margin: 0; }
 .stage-sub { color: var(--muted); font-size: 12px; margin: -8px 0 0; }
