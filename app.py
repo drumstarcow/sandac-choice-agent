@@ -150,8 +150,10 @@ def build_wheel_html(options, probs, preset_idx=None):
   </svg>
   <button id="spinbtn" type="button"
     style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+           box-sizing:border-box;padding:0;margin:0;
            width:84px;height:84px;border-radius:50%;border:4px solid #fff;
            background:#e63946;color:#fff;font-size:18px;font-weight:bold;cursor:pointer;
+           font-family:inherit;white-space:nowrap;text-align:center;
            box-shadow:0 6px 16px rgba(0,0,0,.35);line-height:1.1">转一下<br><span style="font-size:11px;font-weight:normal">点中间</span></button>
 </div>
 <script>
