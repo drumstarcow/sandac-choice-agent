@@ -13,6 +13,7 @@ import datetime
 import json
 import os
 import random
+import socket
 import sys
 import threading
 import traceback
@@ -686,9 +687,29 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json({"error": f"{type(e).__name__}: {e}"}, 500)
 
 
+class Server(ThreadingHTTPServer):
+    """独占端口的 HTTP 服务。
+
+    Windows 上 SO_REUSEADDR 允许重复绑定同一端口（谁先监听谁收包），
+    于是「新进程以为自己起来了，浏览器却连到上次没关干净的旧进程」——
+    表现就是首页 404。这里关掉复用、改用 SO_EXCLUSIVEADDRUSE，
+    端口被占时直接抛 OSError，由上层换端口，绝不错绑。
+    """
+    allow_reuse_address = False
+    daemon_threads = True
+
+    def server_bind(self):
+        if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+            try:
+                self.socket.setsockopt(socket.SOL_SOCKET,
+                                       socket.SO_EXCLUSIVEADDRUSE, 1)
+            except OSError:
+                pass
+        super().server_bind()
+
+
 def serve(port):
-    srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    return srv
+    return Server(("127.0.0.1", port), Handler)
 
 
 if __name__ == "__main__":
