@@ -84,6 +84,24 @@ class WheelEngine:
 
 
 # ------------------------- 转盘工具 -------------------------
+def _normalize_scene(scene):
+    """把模型可能传歪的 scene 归一化到 where / spice / dish。
+
+    小模型经常把 scene 填成「附近吃去哪」「在哪吃」这类自然语言，
+    直接按严格枚举处理会整条链路失败，这里做一次兜底归一。
+    """
+    s = str(scene or "").strip().lower()
+    if s in ("where", "spice", "dish"):
+        return s
+    if any(k in s for k in ("口味", "辣", "spice", "味道")):
+        return "spice"
+    if any(k in s for k in ("菜", "dish", "吃什么", "吃啥", "具体")):
+        return "dish"
+    if any(k in s for k in ("哪", "地点", "食堂", "外卖", "外面", "附近", "场景", "where", "餐厅")):
+        return "where"
+    return "where"
+
+
 def build_wheel(scene, preference="", budget=None):
     """根据决策层级生成一个转盘配置（真实选项来自数据文件）。
 
@@ -96,6 +114,7 @@ def build_wheel(scene, preference="", budget=None):
       budget: 金额上限（元），仅对 dish 层级生效；None/“不限” 表示不设上限
     返回: 一个 JSON 字符串，含 {"__wheel__": true, "title", "scene", "options", "ctx"}
     """
+    scene = _normalize_scene(scene)
     data = _load()
     if scene == "where":
         options = data.get("where_options", [])

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>吃饱饱助手 · 吃饭决策智能体</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="side">
+    <div class="brand">
+      <div class="logo">🍱</div>
+      <div class="brand-text">
+        <div class="brand-name">吃饱饱助手</div>
+        <div class="brand-sub">校园吃饭决策智能体</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">我的画像</div>
+      <div id="profile" class="panel-body"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">最近的选择</div>
+      <div id="recent" class="panel-body"></div>
+    </div>
+
+    <button class="newchat" id="newchat">＋ 新的一餐</button>
+    <div class="footnote">数据为示例，以实际为准<br>本地模型 · 真实工具调用</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="online"><span class="dot"></span>本地模型在线</div>
+      <div class="model" id="modelname"></div>
+    </header>
+
+    <div class="stream" id="stream"></div>
+
+    <div class="composer">
+      <div class="quick" id="quick">
+        <button class="chip" data-q="我已经有想法了，我想吃火锅">我已经有想法了</button>
+        <button class="chip" data-q="还没想好，你帮我选吧">还没想好</button>
+      </div>
+      <div class="inputrow">
+        <input id="input" placeholder="想吃点啥？也可以直接说「随便」…" autocomplete="off">
+        <button id="send" title="发送">↗</button>
+      </div>
+    </div>
+  </main>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

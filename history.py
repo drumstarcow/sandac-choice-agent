@@ -47,6 +47,14 @@ def delete_history(rid):
     return len(hist)
 
 
+def _num(v):
+    """安全转数字：历史里可能有「不限」这类非数字值，不能让聚合接口整体崩掉。"""
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
 def summarize_recent_profile(limit=10):
     """把最近 limit 条选择聚合为“近期画像”。返回 dict。"""
     hist = load_history()[-limit:]
@@ -56,9 +64,9 @@ def summarize_recent_profile(limit=10):
     wheres = Counter(h.get("where") for h in hist if h.get("where"))
     spices = Counter(h.get("spice") for h in hist if h.get("spice"))
     favorites = Counter((h.get("dish") or h.get("shop_name")) for h in hist if (h.get("dish") or h.get("shop_name")))
-    budgets = [float(h["budget"]) for h in hist if h.get("budget") not in (None, "")]
-    prices = [float(h["price"]) for h in hist if h.get("price") not in (None, "")]
-    ratings = [float(h["rating"]) for h in hist if h.get("rating") not in (None, "")]
+    budgets = [b for b in (_num(h.get("budget")) for h in hist) if b is not None]
+    prices = [p for p in (_num(h.get("price")) for h in hist) if p is not None]
+    ratings = [r for r in (_num(h.get("rating")) for h in hist) if r is not None]
     tags = Counter()
     for h in hist:
         for t in (h.get("tags") or []):
