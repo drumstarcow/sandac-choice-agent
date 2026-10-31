@@ -27,6 +27,7 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 MEAL_LABELS = {"meal": "正餐", "dessert": "甜品饮料"}
 WALK_KM_PER_MIN = 0.08          # 步行速度 ≈ 80 m/min，用于“走 N 分钟”的理由文案
+GRID_CAP = 24                   # 菜品转盘最多放多少个格子（候选池已经上百了）
 
 
 # ------------------------- 数据读取 -------------------------
@@ -47,7 +48,7 @@ def _campus_center(campus=None):
         c = cp["campuses"].get(name) or cp["campuses"][cp["default"]]
         return c
     except Exception:
-        return {"lat": 31.2708, "lng": 121.6695, "address": "上海市浦东新区金海路2727号"}
+        return {"lat": 31.268675, "lng": 121.659057, "address": "上海市浦东新区金海路2727号"}
 
 
 def _haversine(lat1, lng1, lat2, lng2):
@@ -143,11 +144,13 @@ def _norm_scene(scene):
     return "where"
 
 
-def candidates(meal_type="", spice="", budget=None, where="", keyword=""):
+def candidates(meal_type="", spice="", budget=None, where="", keyword="", radius=None):
     """统一候选池（食堂菜品 + 周边店铺招牌）。
 
-    过滤顺序：餐别 → 场景 → 口味 → 预算 → 关键词。
+    过滤顺序：半径 → 餐别 → 场景 → 口味 → 预算 → 关键词。
     口味“随便”/空 表示该层不参与过滤。
+    radius: 半径（km），None/0 表示不限。后续接实时定位时，直接把它换成
+            「用户到各店的距离」即可，算法不用改。
     """
     meal_type = _norm_meal_type(meal_type)
     data = _load()
@@ -164,17 +167,33 @@ def candidates(meal_type="", spice="", budget=None, where="", keyword=""):
         })
 
     for s in _load_shops().get("shops", []):
-        dist = _haversine(center["lat"], center["lng"], s["lat"], s["lng"])
+        # 数据里已经带了地图显示的距离，优先用它；没有坐标就算不出来，直接跳过
+        if s.get("distance_km") is not None:
+            dist = float(s["distance_km"])
+        elif s.get("lat") is not None and s.get("lng") is not None:
+            dist = _haversine(center["lat"], center["lng"], s["lat"], s["lng"])
+        else:
+            continue
         out.append({
             "id": s.get("id"), "name": s.get("dish") or s.get("signature") or s.get("name"),
             "shop": s.get("name"), "price": s.get("avg_price", 0),
             "distance": round(dist, 2), "rating": s.get("rating", 4.0),
             "tags": s.get("tags", []), "meal_type": s.get("meal_type", "meal"),
             "desc": s.get("desc", ""), "img": s.get("img", ""),
-            "where": "外面吃", "source": "shop",
+            # 校内门店（辛耕园、KFC、蜜雪、瑞幸…）属于「食堂」场景，不是「外面吃」
+            "where": "食堂" if s.get("area") == "校内" else "外面吃",
+            "source": "shop",
             "address": s.get("address", ""), "category": s.get("category", ""),
+            "area": s.get("area", ""),
         })
 
+    # 半径（接实时定位后这一层换成「用户到店的距离」）
+    if radius not in (None, "", 0, "0"):
+        try:
+            r = float(radius)
+            out = [c for c in out if float(c["distance"]) <= r]
+        except Exception:
+            pass
     # 餐别
     if meal_type in ("meal", "dessert"):
         out = [c for c in out if c["meal_type"] == meal_type]
@@ -263,6 +282,14 @@ def build_wheel(scene, preference="", budget=None, meal_type="", where=""):
             if d["id"] not in seen:
                 seen.add(d["id"])
                 ordered.append(d)
+        total = len(ordered)
+        # 格子层塞不下上百格（校区周边 + 食堂一共 170+ 个候选）：
+        # 盘上只放评分靠前的 CAP 个，其余仍参与「四条推荐」，只是不上盘。
+        if total > GRID_CAP:
+            ordered = sorted(ordered, key=lambda x: (-float(x.get("rating", 0)),
+                                                     float(x.get("distance", 0))))[:GRID_CAP]
+            tail = f"共 {total} 个候选，盘上只放评分靠前的 {GRID_CAP} 个（其余仍参与四条推荐）"
+            note = f"{note}；{tail}" if note else tail
         options = [d["name"] for d in ordered]
         items = ordered
         skip = None
@@ -289,7 +316,8 @@ def get_dish_card(name):
         if d["name"] == name or d.get("id") == name:
             return d
     for s in _load_shops().get("shops", []):
-        if name in (s.get("dish"), s.get("signature"), s.get("name")):
+        # 支持按 id 查（前端拼 /plate/s45.svg 时传进来的是店铺 id）
+        if name in (s.get("dish"), s.get("signature"), s.get("name")) or s.get("id") == name:
             out = dict(s)
             out["name"] = s.get("dish") or s.get("signature")
             out["shop"] = s.get("name")
@@ -396,7 +424,8 @@ def finalize(candidates_list, picked_id=None, criteria_note=""):
         c["score"] = round(0.5 * nr + 0.3 * npt + 0.2 * nd, 3)
 
     def key(c):
-        return (c.get("shop", ""), c.get("name", ""))
+        # 按「这道菜」去重：不同店同名的同一道菜（三家的柠檬水）不该占四个坑
+        return (c.get("name", "") or "").strip() or (c.get("shop", ""), c.get("id", ""))
 
     specs = [
         ("best", "综合最佳", "🏆", sorted(cands, key=lambda x: -x["score"])),
@@ -405,17 +434,25 @@ def finalize(candidates_list, picked_id=None, criteria_note=""):
         ("top", "评分最高", "⭐", sorted(cands, key=lambda x: (-x["rating"], -x["score"]))),
     ]
 
-    used = set()
+    used, used_shop = set(), set()
     groups = []
     for gkey, label, emoji, ordered in specs:
+        # 先按「不同店、不同菜」挑；实在凑不出再放宽到同店，最后才允许跳过
         pick = None
-        for c in ordered:
-            if key(c) not in used:
+        for strict in (True, False):
+            for c in ordered:
+                if key(c) in used:
+                    continue
+                if strict and c.get("shop") in used_shop:
+                    continue
                 pick = c
+                break
+            if pick is not None:
                 break
         if pick is None:            # 候选池不够四个不同选项：宁可不给，也不拿重复的凑数
             continue
         used.add(key(pick))
+        used_shop.add(pick.get("shop"))
         groups.append({"key": gkey, "label": label, "emoji": emoji,
                        "item": pick, "reason": _reason(gkey, pick, cands),
                        "picked": bool(picked_id) and pick.get("id") == picked_id})
@@ -697,7 +734,12 @@ def recommend_nearby_food(campus=None, taste=None, budget=None, criteria="value"
             continue
         if taste_list and not any(t in tags for t in taste_list):
             continue
-        dist = _haversine(c["lat"], c["lng"], s["lat"], s["lng"])
+        if s.get("distance_km") is not None:      # 数据里已带地图距离，优先用它
+            dist = float(s["distance_km"])
+        elif s.get("lat") is not None and s.get("lng") is not None:
+            dist = _haversine(c["lat"], c["lng"], s["lat"], s["lng"])
+        else:
+            continue
         item = dict(s)
         item["distance_km"] = round(dist, 2)
         item["walk_min"] = max(1, round(dist / WALK_KM_PER_MIN))

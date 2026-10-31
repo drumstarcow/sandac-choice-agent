@@ -402,8 +402,10 @@ function renderGrid(stage, st) {
     return;
   }
   stage.appendChild(el('h2', 'stage-title', esc(w.title)));
-  stage.appendChild(el('p', 'stage-sub',
-    `共 ${items.length} 道菜 · 每格都是真实数据（价格/距离来自后端，不是前端假数据）`));
+  const sub = w.note
+    ? `${esc(w.note)}　｜　每格都是真实数据（价格 / 距离来自后端）`
+    : `共 ${items.length} 道菜 · 每格都是真实数据（价格 / 距离来自后端，不是前端假数据）`;
+  stage.appendChild(el('p', 'stage-sub', sub));
 
   // 预算
   const sel = el('select', 'picker');
@@ -593,7 +595,7 @@ function renderFinal(stage, st) {
   stage.appendChild(el('h2', 'stage-title', '今天的决定，贴这儿了'));
   const card = el('div', 'final');
   card.innerHTML = `
-    <img src="${esc(f.img || '')}" alt="${esc(f.name)}">
+    <img src="${esc(f.img || ('/plate/' + (f.id || '') + '.svg'))}" alt="${esc(f.name)}">
     <div class="final-body">
       <div class="final-kicker">今日打卡 · ${esc(f.meal)}</div>
       <h3 class="final-name">${esc(f.name)}</h3>

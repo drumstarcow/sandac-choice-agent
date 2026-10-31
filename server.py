@@ -362,6 +362,7 @@ def act_finalize():
     except Exception as e:
         log(f"[SAVE] 落盘失败：{e}")
     SESS.final = {
+        "id": item.get("id", ""),
         "name": name, "shop": item.get("shop", ""), "price": item.get("price", 0),
         "distance": item.get("distance", 0),
         "walk_min": item.get("walk_min", max(1, round(float(item.get("distance", 0)) / 0.08))),
