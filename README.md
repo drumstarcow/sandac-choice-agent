@@ -7,7 +7,7 @@
 > **开源创新微专业 · 期末考查（路径 B：校园服务智能体）**
 > 自然语言理解 → 真实 Tool Calling → 五层决策转盘 / 四条并列推荐 → 记忆画像 → 打卡卡片落盘。
 >
-> 仓库地址：<https://gitcode.com/bravecow/sandac-choice-agent> ｜ 课件：`slides.html`（双击即开）
+> 仓库地址：<https://gitcode.com/bravecow/sandac-choice-agent> ｜ GitHub 镜像：<https://github.com/drumstarcow/sandac-choice-agent> ｜ 课件：`slides.html`（双击即开）
 
 ## 一、项目简介
 
